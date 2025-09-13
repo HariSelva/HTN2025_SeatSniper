@@ -1,5 +1,6 @@
 from fastapi import APIRouter, BackgroundTasks
 from pydantic import BaseModel
+from typing import Optional
 
 router = APIRouter()
 
@@ -8,11 +9,6 @@ class ScrapeRequest(BaseModel):
 
 def run_scraper(course_id: Optional[str] = None):
     """Background task to scrape course data"""
-    # In a real implementation, this would:
-    # 1. Connect to the university's course system
-    # 2. Scrape section data
-    # 3. Update DynamoDB
-    # 4. Send events to Kinesis stream
     print(f"Running scraper for course: {course_id or 'all courses'}")
 
 @router.post("/scrape")
