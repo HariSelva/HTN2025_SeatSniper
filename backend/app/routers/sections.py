@@ -3,12 +3,16 @@ from typing import List
 from core.config import Section
 from datetime import datetime
 import boto3
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 dynamodb = boto3.resource(
     "dynamodb",
     region_name="us-east-1",
-    aws_access_key_id="AKIA4NNNXZMDJZMGNZXX",
-    aws_secret_access_key="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"
+    aws_access_key_id=os.getenv("ACCESS_KEY"),
+    aws_secret_access_key=os.getenv("SECRET_KEY")
 )
 
 table_name = f"course_sections"

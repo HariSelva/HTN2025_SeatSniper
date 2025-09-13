@@ -5,20 +5,31 @@ from typing import Optional
 
 class Settings(BaseSettings):
     # Database settings
-    dynamodb_region: str = "us-east-1"
-    dynamodb_table_prefix: str = "htn2025"
-    
+    dynamodb_region: str
+    dynamodb_table_prefix: str
+
     # Stream settings
-    kinesis_stream_name: str = "htn2025-stream"
-    
+    kinesis_stream_name: str
+
     # Auth settings
-    secret_key: str = "your-secret-key-here"
-    algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
-    
+    access_key: Optional[str] = None
+    secret_key: str
+    algorithm: str
+    access_token_expire_minutes: int
+
     # Scraper settings
-    scraper_interval: int = 60  # seconds
-    
+    scraper_interval: int
+
+    # Course Intelligence APIs
+    cohere_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None
+    mongodb_uri: Optional[str] = None
+
+    # Reddit API
+    reddit_client_id: Optional[str] = None
+    reddit_client_secret: Optional[str] = None
+    reddit_user_agent: Optional[str] = None
+
     class Config:
         env_file = ".env"
 
