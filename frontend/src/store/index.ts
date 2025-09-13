@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { User, Section, WatchlistItem, Hold } from '@/types';
+import { User, Section, WatchlistItem, Hold, Notification } from '@/types';
 
 interface AppState {
   // User state
@@ -10,6 +10,7 @@ interface AppState {
   sections: Section[];
   watchlist: WatchlistItem[];
   holds: Hold[];
+  notifications: Notification[];
   
   // UI state
   isLoading: boolean;
@@ -20,6 +21,7 @@ interface AppState {
   setSections: (sections: Section[]) => void;
   setWatchlist: (watchlist: WatchlistItem[]) => void;
   setHolds: (holds: Hold[]) => void;
+  setNotifications: (notifications: Notification[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   
@@ -30,6 +32,10 @@ interface AppState {
   // Hold actions
   claimHold: (sectionId: string) => void;
   releaseHold: (sectionId: string) => void;
+  
+  // Notification actions
+  addNotification: (sectionId: string) => void;
+  removeNotification: (sectionId: string) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -39,6 +45,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   sections: [],
   watchlist: [],
   holds: [],
+  notifications: [],
   isLoading: false,
   error: null,
   
@@ -47,6 +54,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setSections: (sections) => set({ sections }),
   setWatchlist: (watchlist) => set({ watchlist }),
   setHolds: (holds) => set({ holds }),
+  setNotifications: (notifications) => set({ notifications }),
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
   
@@ -90,5 +98,24 @@ export const useAppStore = create<AppState>((set, get) => ({
   releaseHold: (sectionId) => {
     const { holds } = get();
     set({ holds: holds.filter(hold => hold.sectionId !== sectionId) });
+  },
+  
+  // Notification actions
+  addNotification: (sectionId) => {
+    const { notifications, user } = get();
+    if (!user) return;
+    
+    const newNotification: Notification = {
+      userId: user.id,
+      sectionId,
+      addedAt: new Date().toISOString(),
+    };
+    
+    set({ notifications: [...notifications, newNotification] });
+  },
+  
+  removeNotification: (sectionId) => {
+    const { notifications } = get();
+    set({ notifications: notifications.filter(notification => notification.sectionId !== sectionId) });
   },
 }));

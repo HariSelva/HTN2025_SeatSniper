@@ -16,6 +16,7 @@ interface Course {
   enrolled: number;
   capacity: number;
   tags: string[];
+  isFull?: boolean;
 }
 
 const mockCourses: Course[] = [
@@ -120,6 +121,24 @@ const mockCourses: Course[] = [
     enrolled: 67,
     capacity: 80,
     tags: ['Engineering', 'Project', 'Core']
+  },
+  {
+    id: '7',
+    name: 'Advanced Algorithms',
+    code: 'CS501',
+    description: 'Deep dive into advanced algorithmic techniques and complexity analysis for competitive programming.',
+    professor: 'Dr. Robert Chen',
+    professorRating: 4.9,
+    courseRating: 4.7,
+    time: '2:00 PM - 3:30 PM',
+    days: ['Mon', 'Wed', 'Fri'],
+    location: 'DC 1301',
+    credits: 3,
+    prerequisites: ['CS201', 'MATH239'],
+    enrolled: 30,
+    capacity: 30,
+    tags: ['Algorithms', 'Advanced', 'Full'],
+    isFull: true
   }
 ];
 
@@ -165,9 +184,10 @@ export const DiscoverPage: React.FC = () => {
     <div className="container-linkedin py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="heading-linkedin mb-4">Discover Courses</h1>
+        <h1 className="heading-linkedin mb-4">Available Courses</h1>
         <p className="subheading-linkedin mb-6">
-          Find the perfect courses for your academic journey
+          Discover and monitor course sections for Hack the North 2025. 
+          Get real-time updates on seat availability and never miss an opportunity.
         </p>
 
         {/* Search and Filters */}
@@ -216,6 +236,13 @@ export const DiscoverPage: React.FC = () => {
                 <div className="text-right">
                   <div className="text-xs text-gray-500">Credits</div>
                   <div className="text-lg font-semibold text-gray-900">{course.credits}</div>
+                  {course.isFull && (
+                    <div className="mt-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Full
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -309,9 +336,18 @@ export const DiscoverPage: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-3">
-                <button className="btn-primary-linkedin flex-1">
-                  Enroll Now
-                </button>
+                {course.isFull ? (
+                  <button className="btn-linkedin flex-1 bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 0 0-15 0v5h5l-5 5-5-5h5v-5a7.5 7.5 0 0 0 15 0v5z" />
+                    </svg>
+                    Notify me when available
+                  </button>
+                ) : (
+                  <button className="btn-primary-linkedin flex-1">
+                    Enroll Now
+                  </button>
+                )}
                 <button className="btn-secondary-linkedin">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
