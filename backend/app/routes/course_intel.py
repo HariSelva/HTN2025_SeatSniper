@@ -51,48 +51,9 @@ def get_intel(course: str, term: str = ""):
             
         return {"status": "ok", "stale": stale, "intel": doc}
     except Exception as e:
-        # Return mock data when MongoDB fails
-        print(f"MongoDB error, returning mock data for {course}: {e}")
-        mock_intel = {
-            "course": course,
-            "term": term,
-            "summary": f"{course} is a comprehensive course covering fundamental concepts and practical applications. Students will gain hands-on experience with real-world projects and assignments.",
-            "workload": {
-                "weekly_hours": "8-12 hours",
-                "assessment_mix": ["Weekly assignments", "Midterm exam", "Final project", "Quizzes"]
-            },
-            "difficulty": "Moderate - Suitable for students with basic programming knowledge",
-            "tips": [
-                "Start assignments early to avoid last-minute stress",
-                "Attend all lectures and take detailed notes",
-                "Form study groups with classmates",
-                "Use office hours when you need help",
-                "Practice regularly to reinforce concepts"
-            ],
-            "pitfalls": [
-                "Procrastinating on assignments",
-                "Not asking for help when stuck",
-                "Skipping lectures",
-                "Not testing code thoroughly",
-                "Leaving work until the last minute"
-            ],
-            "prof_notes": [
-                {
-                    "name": "Dr. Smith",
-                    "take": "Excellent professor with clear explanations and helpful office hours. Assignments are challenging but fair."
-                }
-            ],
-            "sources": [
-                {
-                    "title": f"{course} Course Review",
-                    "subreddit": "university",
-                    "permalink": f"/r/university/comments/{course.lower()}_review",
-                    "score": 42,
-                    "age_days": 5
-                }
-            ]
-        }
-        return {"status": "ok", "stale": False, "intel": mock_intel}
+        # Return error when MongoDB fails instead of mock data
+        print(f"MongoDB error for {course}: {e}")
+        return {"status": "error", "message": f"Database connection failed: {str(e)}", "intel": None}
 
 @router.post("/api/course-intel/refresh")
 def refresh(request: RefreshRequest):

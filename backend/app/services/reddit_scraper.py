@@ -72,8 +72,8 @@ def search_reddit_for_course(course_code: str, limit: int = 20) -> List[Dict]:
         List of dictionaries containing Reddit post data
     """
     if not reddit:
-        print("Reddit client not available, returning mock data")
-        return get_mock_reddit_data(course_code)
+        print("Reddit client not available, returning empty data")
+        return []
     
     print(f"Fast Reddit search for {course_code}")
     snippets = []
@@ -100,11 +100,8 @@ def search_reddit_for_course(course_code: str, limit: int = 20) -> List[Dict]:
                 }
                 snippets.append(snippet)
         
-        # If we don't have enough, add some mock data
-        if len(snippets) < 3:
-            print(f"Only found {len(snippets)} real snippets, adding mock data")
-            mock_snippets = get_mock_reddit_data(course_code)
-            snippets.extend(mock_snippets[:3])
+        # Only return real data, no mock data fallback
+        print(f"Found {len(snippets)} real Reddit snippets for {course_code}")
         
         # Sort by score and limit
         snippets.sort(key=lambda x: x["score"], reverse=True)
@@ -112,7 +109,7 @@ def search_reddit_for_course(course_code: str, limit: int = 20) -> List[Dict]:
         
     except Exception as e:
         print(f"Error in Reddit search: {e}")
-        return get_mock_reddit_data(course_code)
+        return []
 
 def get_mock_reddit_data(course_code: str) -> List[Dict]:
     """Return mock Reddit data when Reddit API is not available"""
@@ -185,19 +182,15 @@ def scrape_course_reddit_data(course_code: str, term: str = "") -> List[Dict]:
                 print(f"Found {len(snippets)} Reddit snippets for {course_code} (real data)")
                 return snippets
             else:
-                print(f"No real Reddit data found for {course_code}, using mock data")
+                print(f"No real Reddit data found for {course_code}")
+                return []
         except Exception as e:
             print(f"Error with real Reddit API for {course_code}: {e}")
-            print("Falling back to mock data")
+            return []
     
-    # Fallback to mock data
-    try:
-        snippets = get_mock_reddit_data(course_code)
-        print(f"Found {len(snippets)} Reddit snippets for {course_code} (mock data)")
-        return snippets
-    except Exception as e:
-        print(f"Error getting mock Reddit data for {course_code}: {e}")
-        return []
+    # No fallback to mock data - return empty if no Reddit client
+    print(f"No Reddit client available for {course_code}")
+    return []
 
 # Test function
 if __name__ == "__main__":

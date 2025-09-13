@@ -35,10 +35,24 @@ def rerank_docs(query: str, docs: list[str], top_k: int = 12, snippets: list[dic
         return sorted_docs[:top_k]
 
 def summarize_to_json(course: str, term: str, official_desc: str, ranked_snippets: list[dict]):
-    # Skip AI processing for speed - generate smart mock data based on snippets
-    print("Using fast summary generation (no AI)")
+    # Only use real Reddit data - no mock data generation
+    print("Using real data only (no mock data)")
     
-    # Extract insights from Reddit snippets
+    if not ranked_snippets:
+        # Return minimal data structure when no real data is available
+        return {
+            "course": course, 
+            "term": term, 
+            "summary": f"No recent student discussions found for {course}. Course information may be limited.",
+            "workload": {"weekly_hours": "Unknown", "assessment_mix": []},
+            "difficulty": "Unknown",
+            "tips": [],
+            "pitfalls": [],
+            "prof_notes": [{"name": "Note", "take": "No recent student feedback available"}],
+            "sources": []
+        }
+    
+    # Extract insights from real Reddit snippets only
     tips = []
     pitfalls = []
     workload_hints = []
@@ -59,23 +73,23 @@ def summarize_to_json(course: str, term: str, official_desc: str, ranked_snippet
         if any(word in text for word in ["workload", "hours", "time", "assignment"]):
             workload_hints.append(snippet.get('snippet', '')[:80])
     
-    # Generate smart summary based on Reddit data
-    summary = f"Based on student discussions, {course} is a comprehensive course that covers essential concepts. "
+    # Generate summary based only on real Reddit data
+    summary = f"Based on student discussions, {course} is discussed in the community. "
     if workload_hints:
         summary += f"Students mention: {workload_hints[0]}... "
-    summary += "The course provides hands-on experience and builds foundational knowledge."
+    summary += "The course appears to be part of the curriculum based on student discussions."
     
     return {
         "course": course, "term": term, 
         "summary": summary,
         "workload": {
-            "weekly_hours": "8-12 hours", 
-            "assessment_mix": ["Assignments (40%)", "Midterm (30%)", "Final (30%)"]
+            "weekly_hours": "Unknown - based on limited data", 
+            "assessment_mix": []
         },
-        "difficulty": "Intermediate - requires basic programming knowledge", 
-        "tips": tips[:3] if tips else ["Start assignments early", "Attend all lectures", "Practice regularly"],
-        "pitfalls": pitfalls[:3] if pitfalls else ["Don't procrastinate on assignments", "Don't skip lectures", "Don't ignore prerequisites"],
-        "prof_notes": [{"name": "Student Feedback", "take": "Based on Reddit discussions, students find the course challenging but rewarding"}],
+        "difficulty": "Unknown - based on limited data", 
+        "tips": tips[:3] if tips else [],
+        "pitfalls": pitfalls[:3] if pitfalls else [],
+        "prof_notes": [{"name": "Student Feedback", "take": "Based on Reddit discussions, limited information available"}],
         "sources": ranked_snippets[:5]  # Include actual Reddit sources
     }
 

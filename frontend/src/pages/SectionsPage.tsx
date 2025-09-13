@@ -23,55 +23,36 @@ interface Section {
   section?: string;
 }
 
-const courseInfo = {
-  CS101: {
-    name: "Introduction to Computer Science",
-    code: "CS101",
-    description:
-      "Learn the fundamentals of programming and computer science concepts.",
-    icon: "💻",
-    color: "from-blue-500 to-cyan-500",
-  },
-  CS201: {
-    name: "Data Structures and Algorithms",
-    code: "CS201",
-    description:
-      "Master essential data structures and algorithmic problem-solving techniques.",
-    icon: "🔧",
-    color: "from-green-500 to-emerald-500",
-  },
-  CS301: {
-    name: "Database Systems",
-    code: "CS301",
-    description:
-      "Design and implement efficient database systems and learn query optimization.",
-    icon: "🗄️",
-    color: "from-purple-500 to-violet-500",
-  },
-  CS401: {
-    name: "Machine Learning",
-    code: "CS401",
-    description:
-      "Explore AI and machine learning algorithms for real-world applications.",
-    icon: "🤖",
-    color: "from-orange-500 to-red-500",
-  },
-  CS250: {
-    name: "Web Development",
-    code: "CS250",
-    description:
-      "Build modern web applications using HTML, CSS, JavaScript, and frameworks.",
-    icon: "🌐",
-    color: "from-cyan-500 to-blue-500",
-  },
-  CS350: {
-    name: "Software Engineering",
-    code: "CS350",
-    description:
-      "Learn software development methodologies, testing, and project management.",
-    icon: "⚙️",
-    color: "from-indigo-500 to-purple-500",
-  },
+// Helper function to get course info based on course code
+const getCourseInfo = (courseCode: string, courseTitle?: string) => {
+  const subject = courseCode.substring(0, 2);
+  const catalogNumber = courseCode.substring(2);
+  
+  const icons: { [key: string]: string } = {
+    "CS": "💻",
+    "ECE": "⚡",
+    "ME": "🔧",
+    "MATH": "📐",
+    "PHYS": "🔬",
+    "CHEM": "🧪",
+  };
+  
+  const colors: { [key: string]: string } = {
+    "CS": "from-blue-500 to-cyan-500",
+    "ECE": "from-green-500 to-emerald-500", 
+    "ME": "from-purple-500 to-violet-500",
+    "MATH": "from-orange-500 to-red-500",
+    "PHYS": "from-indigo-500 to-purple-500",
+    "CHEM": "from-pink-500 to-rose-500",
+  };
+  
+  return {
+    name: courseTitle || `${subject} ${catalogNumber}`,
+    code: courseCode,
+    description: `${subject} course covering specialized topics and practical applications.`,
+    icon: icons[subject] || "📚",
+    color: colors[subject] || "from-gray-500 to-gray-600",
+  };
 };
 
 export const SectionsPage: React.FC = () => {
@@ -81,9 +62,7 @@ export const SectionsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const course = courseId
-    ? courseInfo[courseId as keyof typeof courseInfo]
-    : null;
+  const course = courseId ? getCourseInfo(courseId) : null;
 
   // Fetch sections from API
   useEffect(() => {
@@ -93,10 +72,17 @@ export const SectionsPage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await apiClient.get(`/api/sections/${courseId}`);
+        const response = await apiClient.get("/api/sections/");
         // Transform snake_case to camelCase and extract data
-        const transformedData = transformToCamelCase(response.data || []);
-        setSections(transformedData);
+        const transformedData = transformToCamelCase(response);
+        
+        // Filter sections for the specific course
+        const courseSections = transformedData.filter((section: any) => {
+          const sectionCourseCode = `${section.subject}${section.catalogNumber}`;
+          return sectionCourseCode === courseId;
+        });
+        
+        setSections(courseSections);
       } catch (err) {
         setError("Failed to fetch sections");
         console.error(err);
@@ -110,16 +96,16 @@ export const SectionsPage: React.FC = () => {
 
   // Transform API data to match component expectations
   const courseSections = sections.map(section => ({
-    id: section.id,
-    courseId: section.courseId || section.course_id,
-    title: section.title || `${section.courseId || section.course_id} - Section ${section.section || '001'}`,
-    instructor: section.instructor || "TBD",
-    timeSlot: section.timeSlot || section.time_slot || "TBD",
-    days: section.days || ["TBD"],
-    availableSeats: section.availableSeats || section.available_seats || 0,
-    totalCapacity: section.totalCapacity || section.total_capacity || 0,
-    location: section.location || "TBD",
-    lastUpdated: section.lastUpdated || section.last_updated || new Date().toISOString(),
+    id: section.classNumber || `${section.subject}${section.catalogNumber}-${section.componentSection}`,
+    courseId: `${section.subject}${section.catalogNumber}`,
+    title: `${section.subject}${section.catalogNumber} - ${section.componentSection}`,
+    instructor: "TBD", // Not available in API
+    timeSlot: "TBD", // Not available in API
+    days: ["TBD"], // Not available in API
+    availableSeats: section.availableSeats || 0,
+    totalCapacity: section.enrollmentCapacity || 0,
+    location: "TBD", // Not available in API
+    lastUpdated: new Date().toISOString(),
   }));
 
   const totalSections = courseSections.length;

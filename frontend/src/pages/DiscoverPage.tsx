@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiClient, transformToCamelCase } from "@/utils/api";
 
 interface Course {
   id: string;
@@ -20,146 +21,127 @@ interface Course {
   isFull?: boolean;
 }
 
-const mockCourses: Course[] = [
-  {
-    id: "1",
-    name: "Introduction to Computer Science",
-    code: "CS101",
-    description:
-      "Learn the fundamentals of programming and computer science concepts including algorithms, data structures, and software development.",
-    professor: "Dr. Sarah Johnson",
-    professorRating: 4.8,
-    courseRating: 4.6,
-    time: "9:00 AM - 10:30 AM",
-    days: ["Mon", "Wed", "Fri"],
-    location: "MC 4020",
-    credits: 3,
-    prerequisites: [],
-    enrolled: 85,
-    capacity: 120,
-    tags: ["Programming", "Beginner", "Popular"],
-  },
-  {
-    id: "2",
-    name: "Data Structures and Algorithms",
-    code: "CS201",
-    description:
-      "Master essential data structures and algorithmic problem-solving techniques for efficient software development.",
-    professor: "Prof. Michael Chen",
-    professorRating: 4.5,
-    courseRating: 4.4,
-    time: "2:00 PM - 3:30 PM",
-    days: ["Tue", "Thu"],
-    location: "DC 1351",
-    credits: 3,
-    prerequisites: ["CS101"],
-    enrolled: 72,
-    capacity: 95,
-    tags: ["Algorithms", "Intermediate", "Core"],
-  },
-  {
-    id: "3",
-    name: "Database Systems",
-    code: "CS301",
-    description:
-      "Design and implement efficient database systems and learn query optimization techniques.",
-    professor: "Dr. Emily Rodriguez",
-    professorRating: 4.7,
-    courseRating: 4.3,
-    time: "11:00 AM - 12:30 PM",
-    days: ["Mon", "Wed", "Fri"],
-    location: "MC 2066",
-    credits: 3,
-    prerequisites: ["CS201"],
-    enrolled: 45,
-    capacity: 78,
-    tags: ["Database", "Advanced", "Practical"],
-  },
-  {
-    id: "4",
-    name: "Machine Learning",
-    code: "CS401",
-    description:
-      "Explore AI and machine learning algorithms for real-world applications and data analysis.",
-    professor: "Prof. David Kim",
-    professorRating: 4.9,
-    courseRating: 4.8,
-    time: "3:30 PM - 5:00 PM",
-    days: ["Tue", "Thu"],
-    location: "DC 1304",
-    credits: 3,
-    prerequisites: ["CS201", "MATH235"],
-    enrolled: 58,
-    capacity: 65,
-    tags: ["AI", "Advanced", "Hot"],
-  },
-  {
-    id: "5",
-    name: "Web Development",
-    code: "CS250",
-    description:
-      "Build modern web applications using HTML, CSS, JavaScript, and popular frameworks.",
-    professor: "Dr. Alex Thompson",
-    professorRating: 4.6,
-    courseRating: 4.5,
-    time: "10:00 AM - 11:30 AM",
-    days: ["Mon", "Wed", "Fri"],
-    location: "MC 3003",
-    credits: 3,
-    prerequisites: ["CS101"],
-    enrolled: 92,
-    capacity: 100,
-    tags: ["Web", "Practical", "Popular"],
-  },
-  {
-    id: "6",
-    name: "Software Engineering",
-    code: "CS350",
-    description:
-      "Learn software development methodologies, testing, and project management for large-scale applications.",
-    professor: "Prof. Lisa Wang",
-    professorRating: 4.4,
-    courseRating: 4.2,
-    time: "1:00 PM - 2:30 PM",
-    days: ["Tue", "Thu"],
-    location: "DC 2568",
-    credits: 3,
-    prerequisites: ["CS201", "CS250"],
-    enrolled: 67,
-    capacity: 80,
-    tags: ["Engineering", "Project", "Core"],
-  },
-  {
-    id: "7",
-    name: "Advanced Algorithms",
-    code: "CS501",
-    description:
-      "Deep dive into advanced algorithmic techniques and complexity analysis for competitive programming.",
-    professor: "Dr. Robert Chen",
-    professorRating: 4.9,
-    courseRating: 4.7,
-    time: "2:00 PM - 3:30 PM",
-    days: ["Mon", "Wed", "Fri"],
-    location: "DC 1301",
-    credits: 3,
-    prerequisites: ["CS201", "MATH239"],
-    enrolled: 30,
-    capacity: 30,
-    tags: ["Algorithms", "Advanced", "Full"],
-    isFull: true,
-  },
-];
+interface ApiCourse {
+  subject: string;
+  catalog_number: string;
+  title: string;
+  class_number: string;
+  component_section: string;
+  enrollment_capacity: number;
+  enrollment_total: number;
+  available_seats: number;
+}
+
+// Helper function to generate course tags based on subject and catalog number
+const generateCourseTags = (subject: string, catalogNumber: string): string[] => {
+  const tags: string[] = [];
+  
+  // Subject-based tags
+  if (subject === "CS") {
+    tags.push("Computer Science");
+    if (parseInt(catalogNumber) < 200) tags.push("Beginner");
+    else if (parseInt(catalogNumber) < 400) tags.push("Intermediate");
+    else tags.push("Advanced");
+  } else if (subject === "ECE") {
+    tags.push("Electrical Engineering");
+    if (parseInt(catalogNumber) < 200) tags.push("Beginner");
+    else if (parseInt(catalogNumber) < 400) tags.push("Intermediate");
+    else tags.push("Advanced");
+  } else if (subject === "ME") {
+    tags.push("Mechanical Engineering");
+    if (parseInt(catalogNumber) < 200) tags.push("Beginner");
+    else if (parseInt(catalogNumber) < 400) tags.push("Intermediate");
+    else tags.push("Advanced");
+  }
+  
+  // Component section based tags
+  if (catalogNumber.includes("6")) tags.push("Graduate");
+  if (catalogNumber.includes("7")) tags.push("Graduate");
+  if (catalogNumber.includes("8")) tags.push("Graduate");
+  
+  return tags;
+};
+
+// Helper function to generate course description
+const generateCourseDescription = (title: string, subject: string, catalogNumber: string): string => {
+  const descriptions: { [key: string]: string } = {
+    "CS": "Computer Science course covering fundamental concepts and practical applications.",
+    "ECE": "Electrical and Computer Engineering course focusing on hardware and software systems.",
+    "ME": "Mechanical Engineering course covering design, analysis, and manufacturing principles."
+  };
+  
+  return descriptions[subject] || `${title} - Advanced course covering specialized topics in ${subject}.`;
+};
 
 export const DiscoverPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState("");
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // Fetch courses from API
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await apiClient.get<ApiCourse[]>("/api/sections/");
+        const transformedData = transformToCamelCase(response);
+        
+        // Group courses by subject + catalog_number to avoid duplicates
+        const courseMap = new Map<string, Course>();
+        
+        transformedData.forEach((apiCourse: ApiCourse) => {
+          const courseCode = `${apiCourse.subject}${apiCourse.catalogNumber}`;
+          
+          if (!courseMap.has(courseCode)) {
+            const course: Course = {
+              id: courseCode,
+              name: apiCourse.title,
+              code: courseCode,
+              description: generateCourseDescription(apiCourse.title, apiCourse.subject, apiCourse.catalogNumber),
+              professor: "TBD", // Not available in API
+              professorRating: undefined,
+              courseRating: undefined,
+              time: "TBD", // Not available in API
+              days: ["TBD"], // Not available in API
+              location: "TBD", // Not available in API
+              credits: 3, // Default value
+              prerequisites: [],
+              enrolled: apiCourse.enrollmentTotal,
+              capacity: apiCourse.enrollmentCapacity,
+              tags: generateCourseTags(apiCourse.subject, apiCourse.catalogNumber),
+              isFull: apiCourse.availableSeats <= 0,
+            };
+            courseMap.set(courseCode, course);
+          } else {
+            // Update enrollment info if this section has more students
+            const existingCourse = courseMap.get(courseCode)!;
+            existingCourse.enrolled += apiCourse.enrollmentTotal;
+            existingCourse.capacity += apiCourse.enrollmentCapacity;
+            existingCourse.isFull = existingCourse.enrolled >= existingCourse.capacity;
+          }
+        });
+        
+        setCourses(Array.from(courseMap.values()));
+      } catch (err) {
+        setError("Failed to fetch courses");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
   const allTags = Array.from(
-    new Set(mockCourses.flatMap((course) => course.tags))
+    new Set(courses.flatMap((course) => course.tags))
   );
 
-  const filteredCourses = mockCourses.filter((course) => {
+  const filteredCourses = courses.filter((course) => {
     const matchesSearch =
       course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -194,6 +176,40 @@ export const DiscoverPage: React.FC = () => {
       </div>
     );
   };
+
+  if (loading) {
+    return (
+      <div className="container-linkedin py-8">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Loading courses...</h3>
+          <p className="text-gray-600">Fetching real-time course data</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container-linkedin py-8">
+        <div className="text-center py-12">
+          <div className="text-red-400 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading courses</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="btn-primary-linkedin"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container-linkedin py-8">
