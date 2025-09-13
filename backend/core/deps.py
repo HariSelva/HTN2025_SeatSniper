@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     # Database settings
     dynamodb_region: str = "us-east-1"
     dynamodb_table_prefix: str = "htn2025"
-    
+
     # Stream settings
     kinesis_stream_name: str = "htn2025-stream"
     sections_stream_arn: str = ""
@@ -26,24 +26,24 @@ class Settings(BaseSettings):
     hold_seconds: int = 120
     
     # Auth settings
+    access_key: Optional[str] = None
     secret_key: str = "your-secret-key-here"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     
     # Course Intel APIs
-    cohere_api_key: str = ""
-    gemini_api_key: str = ""
-    mongodb_uri: str = ""
+    cohere_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None
+    mongodb_uri: Optional[str] = None
     
     # Reddit API (for course intelligence scraping)
-    reddit_client_id: str = ""
-    reddit_client_secret: str = ""
-    reddit_user_agent: str = "SeatSniper/1.0"
+    reddit_client_id: Optional[str] = None
+    reddit_client_secret: Optional[str] = None
+    reddit_user_agent: Optional[str] = "SeatSniper/1.0"
     
     # Additional settings
     email: str = ""
     password: str = ""
-    
     class Config:
         env_file = ".env"
 
