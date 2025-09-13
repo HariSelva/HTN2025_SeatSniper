@@ -1,10 +1,94 @@
-# HTN2025_
+# HTN2025
 Hack the North Project
 
 ## Project Overview
-A course section monitoring and hold management system built with React/TypeScript frontend and FastAPI backend.
+A course section monitoring and hold management system built with React/TypeScript frontend and FastAPI backend. This system allows users to monitor course section availability, manage watchlists, and claim temporary holds on available seats.
 
-## Architecture
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ and npm
+- Python 3.8+
+- AWS CLI configured (for DynamoDB and Kinesis)
+
+### Setup Instructions
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd HTN2025_
+   ```
+
+2. **Frontend Setup**
+   ```bash
+   cd frontend
+   npm install
+   cp env.example .env
+   npm run dev
+   ```
+
+3. **Backend Setup**
+   ```bash
+   cd backend
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   cp env.example .env
+   python main.py
+   ```
+
+4. **Access the Application**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+   - API Documentation: http://localhost:8000/docs
+
+## 📁 Project Structure
+
+```
+HTN2025_/
+├── README.md                    # This file
+├── frontend/                    # React + TypeScript frontend
+│   ├── package.json            # Dependencies and scripts
+│   ├── vite.config.ts          # Vite configuration
+│   ├── tsconfig.json           # TypeScript configuration
+│   ├── index.html              # HTML entry point
+│   ├── src/
+│   │   ├── main.tsx            # React entry point
+│   │   ├── App.tsx             # Main app component
+│   │   ├── index.css           # Global styles
+│   │   ├── components/
+│   │   │   ├── layout/         # AppShell, NavBar
+│   │   │   └── ui/             # SectionCard, WatchButton, HoldButton, StreamIndicator
+│   │   ├── pages/              # LoginPage, CoursesPage, SectionsPage, WatchlistPage
+│   │   ├── hooks/              # useStream hook
+│   │   ├── store/              # Zustand store
+│   │   ├── types/              # TypeScript types
+│   │   └── utils/              # API client
+│   └── env.example             # Environment variables template
+├── backend/                     # FastAPI backend
+│   ├── main.py                 # FastAPI app entry point
+│   ├── requirements.txt        # Python dependencies
+│   ├── app/
+│   │   └── routers/            # API route handlers
+│   │       ├── auth.py         # Authentication endpoints
+│   │       ├── sections.py     # Course sections endpoints
+│   │       ├── watchlist.py    # Watchlist management
+│   │       ├── holds.py        # Hold management
+│   │       ├── stream.py       # SSE streaming
+│   │       └── tasks.py        # Background tasks
+│   ├── core/
+│   │   ├── deps.py             # Dependencies and settings
+│   │   └── config.py           # Data models
+│   └── env.example             # Environment variables template
+├── shared/                      # Shared utilities
+│   ├── types/                  # Common TypeScript types
+│   └── utils/                  # Shared utilities
+└── docs/                       # Documentation
+    ├── SETUP.md               # Detailed setup instructions
+    └── API.md                 # API documentation
+```
+
+## 🏗️ Architecture
 
 ### Frontend (React + TypeScript)
 
@@ -50,9 +134,64 @@ A course section monitoring and hold management system built with React/TypeScri
 - **/api/stream** — Server-Sent Events endpoint for real-time updates
 - **/tasks/scrape** — Optional manual scrape trigger for demonstration purposes
 
-## Features
-- Real-time course section monitoring
-- 2-minute hold system for available seats
-- Watchlist management
-- Server-sent events for live updates
-- Development-friendly authentication
+## ✨ Features
+- **Real-time monitoring** — Live updates on course section availability
+- **2-minute hold system** — Temporary holds on available seats
+- **Watchlist management** — Track multiple sections simultaneously
+- **Server-sent events** — Real-time notifications for seat availability
+- **Development-friendly** — Simple authentication for testing
+- **Responsive design** — Works on desktop and mobile devices
+
+## 🛠️ Development
+
+### Available Scripts
+
+**Frontend:**
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+npm run type-check   # Run TypeScript type checking
+```
+
+**Backend:**
+```bash
+python main.py       # Start development server
+```
+
+### Key Technologies
+
+**Frontend:**
+- React 18 with TypeScript
+- Vite for build tooling
+- Zustand for state management
+- React Router for navigation
+- Axios for API calls
+
+**Backend:**
+- FastAPI for API framework
+- Pydantic for data validation
+- Boto3 for AWS services
+- Server-Sent Events for real-time updates
+
+## 📚 Documentation
+
+- [Setup Guide](docs/SETUP.md) — Detailed setup instructions
+- [API Documentation](docs/API.md) — Complete API reference
+- [Interactive API Docs](http://localhost:8000/docs) — Swagger UI (when backend is running)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 Notes
+
+- This is a development MVP with mock data
+- Real implementation would integrate with university course systems
+- AWS services (DynamoDB, Kinesis) are configured but not required for local development
+- All text is in English as per project requirements
