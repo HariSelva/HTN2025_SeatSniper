@@ -41,6 +41,30 @@ const mockSections = [
     location: "Room 103",
     lastUpdated: new Date().toISOString(),
   },
+  {
+    id: '4',
+    courseId: '1',
+    title: 'CS101 - Section D',
+    instructor: 'Dr. Brown',
+    timeSlot: '4:00 PM - 5:30 PM',
+    days: ['Tuesday', 'Thursday'],
+    availableSeats: 0,
+    totalCapacity: 20,
+    location: 'Room 104',
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: '5',
+    courseId: '1',
+    title: 'CS101 - Section E',
+    instructor: 'Prof. Davis',
+    timeSlot: '1:00 PM - 2:30 PM',
+    days: ['Monday', 'Wednesday', 'Friday'],
+    availableSeats: 0,
+    totalCapacity: 28,
+    location: 'Room 105',
+    lastUpdated: new Date().toISOString(),
+  },
 ];
 
 const courseInfo = {

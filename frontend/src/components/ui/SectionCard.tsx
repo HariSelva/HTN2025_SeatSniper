@@ -2,6 +2,7 @@ import React from 'react';
 import { Section } from '@/types';
 import { WatchButton } from './WatchButton';
 import { HoldButton } from './HoldButton';
+import { NotifyButton } from './NotifyButton';
 
 interface SectionCardProps {
   section: Section;
@@ -110,8 +111,10 @@ export const SectionCard: React.FC<SectionCardProps> = ({ section }) => {
         {/* Action Buttons */}
         <div className="flex gap-3">
           <WatchButton sectionId={section.id} />
-          {isAvailable && (
+          {isAvailable ? (
             <HoldButton sectionId={section.id} />
+          ) : (
+            <NotifyButton sectionId={section.id} />
           )}
         </div>
       </div>

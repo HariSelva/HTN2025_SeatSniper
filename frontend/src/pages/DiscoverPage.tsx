@@ -17,6 +17,7 @@ interface Course {
   enrolled: number;
   capacity: number;
   tags: string[];
+  isFull?: boolean;
 }
 
 const mockCourses: Course[] = [
@@ -128,6 +129,24 @@ const mockCourses: Course[] = [
     capacity: 80,
     tags: ["Engineering", "Project", "Core"],
   },
+  {
+    id: "7",
+    name: "Advanced Algorithms",
+    code: "CS501",
+    description: "Deep dive into advanced algorithmic techniques and complexity analysis for competitive programming.",
+    professor: "Dr. Robert Chen",
+    professorRating: 4.9,
+    courseRating: 4.7,
+    time: "2:00 PM - 3:30 PM",
+    days: ["Mon", "Wed", "Fri"],
+    location: "DC 1301",
+    credits: 3,
+    prerequisites: ["CS201", "MATH239"],
+    enrolled: 30,
+    capacity: 30,
+    tags: ["Algorithms", "Advanced", "Full"],
+    isFull: true
+  }
 ];
 
 export const DiscoverPage: React.FC = () => {
@@ -179,9 +198,10 @@ export const DiscoverPage: React.FC = () => {
     <div className="container-linkedin py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="heading-linkedin mb-4">Discover Courses</h1>
+        <h1 className="heading-linkedin mb-4">Available Courses</h1>
         <p className="subheading-linkedin mb-6">
-          Find the perfect courses for your academic journey
+          Discover and monitor course sections for Hack the North 2025. 
+          Get real-time updates on seat availability and never miss an opportunity.
         </p>
 
         {/* Search and Filters */}
@@ -246,6 +266,13 @@ export const DiscoverPage: React.FC = () => {
                   <div className="text-lg font-semibold text-gray-900">
                     {course.credits}
                   </div>
+                  {course.isFull && (
+                    <div className="mt-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Full
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 

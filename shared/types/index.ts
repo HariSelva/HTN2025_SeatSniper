@@ -16,6 +16,7 @@ export interface Course {
   name: string;
   code: string;
   description?: string;
+  isFull?: boolean;
 }
 
 export interface WatchlistItem {
@@ -29,6 +30,12 @@ export interface Hold {
   sectionId: string;
   claimedAt: string;
   expiresAt: string;
+}
+
+export interface Notification {
+  userId: string;
+  sectionId: string;
+  addedAt: string;
 }
 
 export interface StreamEvent {
