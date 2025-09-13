@@ -172,6 +172,7 @@ interface ApiResponse<T> {
 ```
 
 ### 2. Course Discovery (`/api/courses`)
+**Status**: ❌ MISSING - Currently using mock data in frontend
 
 #### GET `/api/courses/discover`
 **Purpose**: Get courses with enhanced details for discovery page
@@ -234,6 +235,7 @@ interface ApiResponse<T> {
 ```
 
 ### 3. User Profile Management (`/api/user`)
+**Status**: ❌ MISSING - Currently using mock data in frontend
 
 #### GET `/api/user/profile`
 **Purpose**: Get user profile information
@@ -327,6 +329,7 @@ interface ApiResponse<T> {
 ```
 
 ### 4. Calendar Management (`/api/calendar`)
+**Status**: ❌ MISSING - Currently using mock data in frontend
 
 #### GET `/api/user/schedule`
 **Purpose**: Get user's enrolled courses and schedule
@@ -391,6 +394,7 @@ interface ApiResponse<T> {
 ```
 
 ### 5. Authentication (`/api/auth`)
+**Status**: ✅ IMPLEMENTED - Backend has login/logout endpoints
 
 #### POST `/api/auth/login`
 **Purpose**: Development login to obtain user session
@@ -424,7 +428,8 @@ interface ApiResponse<T> {
 }
 ```
 
-### 2. Courses (`/api/courses`)
+### 6. Courses (`/api/courses`)
+**Status**: ❌ MISSING - Currently using mock data in frontend
 
 #### GET `/api/courses`
 **Purpose**: Get all available courses for browsing
@@ -477,9 +482,10 @@ interface ApiResponse<T> {
 }
 ```
 
-### 3. Sections (`/api/sections`)
+### 7. Sections (`/api/sections`)
+**Status**: ✅ PARTIALLY IMPLEMENTED - Backend has basic endpoints, needs data model updates
 
-#### GET `/api/sections/course/{courseId}`
+#### GET `/api/sections/{courseId}`
 **Purpose**: Get all sections for a specific course
 **Response**:
 ```json
@@ -487,43 +493,46 @@ interface ApiResponse<T> {
   "data": [
     {
       "id": "string",
-      "courseId": "string",
+      "course_id": "string",
       "title": "string",
       "instructor": "string",
-      "timeSlot": "string",
+      "time_slot": "string",
       "days": ["string"],
-      "availableSeats": 0,
-      "totalCapacity": 0,
+      "available_seats": 0,
+      "total_capacity": 0,
       "location": "string",
-      "lastUpdated": "string"
+      "last_updated": "string"
     }
   ],
   "success": true
 }
 ```
 
-#### GET `/api/sections/{sectionId}`
-**Purpose**: Get specific section details
+#### GET `/api/sections/`
+**Purpose**: Get all sections
 **Response**:
 ```json
 {
-  "data": {
-    "id": "string",
-    "courseId": "string",
-    "title": "string",
-    "instructor": "string",
-    "timeSlot": "string",
-    "days": ["string"],
-    "availableSeats": 0,
-    "totalCapacity": 0,
-    "location": "string",
-    "lastUpdated": "string"
-  },
+  "data": [
+    {
+      "id": "string",
+      "course_id": "string",
+      "title": "string",
+      "instructor": "string",
+      "time_slot": "string",
+      "days": ["string"],
+      "available_seats": 0,
+      "total_capacity": 0,
+      "location": "string",
+      "last_updated": "string"
+    }
+  ],
   "success": true
 }
 ```
 
-### 4. Watchlist (`/api/watchlist`)
+### 8. Watchlist (`/api/watchlist`)
+**Status**: ✅ IMPLEMENTED - Backend has all watchlist endpoints
 
 #### GET `/api/watchlist/{userId}`
 **Purpose**: Get user's watchlist
@@ -574,7 +583,8 @@ interface ApiResponse<T> {
 }
 ```
 
-### 5. Holds (`/api/holds`)
+### 9. Holds (`/api/holds`)
+**Status**: ✅ IMPLEMENTED - Backend has all holds endpoints
 
 #### GET `/api/holds/{userId}`
 **Purpose**: Get user's active holds
@@ -583,10 +593,10 @@ interface ApiResponse<T> {
 {
   "data": [
     {
-      "userId": "string",
-      "sectionId": "string",
-      "claimedAt": "string",
-      "expiresAt": "string"
+      "user_id": "string",
+      "section_id": "string",
+      "claimed_at": "string",
+      "expires_at": "string"
     }
   ],
   "success": true
@@ -598,18 +608,18 @@ interface ApiResponse<T> {
 **Request**:
 ```json
 {
-  "userId": "string",
-  "sectionId": "string"
+  "user_id": "string",
+  "section_id": "string"
 }
 ```
 **Response**:
 ```json
 {
   "data": {
-    "userId": "string",
-    "sectionId": "string",
-    "claimedAt": "string",
-    "expiresAt": "string"
+    "user_id": "string",
+    "section_id": "string",
+    "claimed_at": "string",
+    "expires_at": "string"
   },
   "success": true
 }
@@ -627,7 +637,8 @@ interface ApiResponse<T> {
 }
 ```
 
-### 6. Server-Sent Events (`/api/stream`)
+### 10. Server-Sent Events (`/api/stream`)
+**Status**: ✅ IMPLEMENTED - Backend has basic SSE endpoint
 
 #### GET `/api/stream`
 **Purpose**: Real-time event stream for seat availability and hold updates
@@ -834,6 +845,163 @@ VITE_DEV_MODE=true
 3. Configure environment variables
 4. Start development server: `npm run dev`
 5. Access application at `http://localhost:3000`
+
+## Priority Implementation for Mock Data Replacement
+
+### High Priority (Required to replace frontend mock data)
+
+#### 1. Course Discovery API (`/api/courses`)
+**Current Status**: ❌ Missing - Frontend uses `mockCourses` array
+**Required Endpoints**:
+- `GET /api/courses/discover` - Get courses with enhanced details for discovery page
+- `GET /api/courses/{id}/details` - Get detailed course information
+- `GET /api/courses` - Get all available courses
+- `GET /api/courses/search?q={query}` - Search courses
+
+**Data Model Updates Needed**:
+```typescript
+interface CourseDetails {
+  id: string;
+  name: string;
+  code: string;
+  description: string;
+  professor: string;
+  professorRating?: number;
+  courseRating?: number;
+  time: string;
+  days: string[];
+  location: string;
+  credits: number;
+  prerequisites?: string[];
+  enrolled: number;
+  capacity: number;
+  tags: string[];
+}
+```
+
+#### 2. User Profile API (`/api/user`)
+**Current Status**: ❌ Missing - Frontend uses `mockUserProfile` object
+**Required Endpoints**:
+- `GET /api/user/profile` - Get user profile information
+- `PUT /api/user/profile` - Update user profile information
+- `PUT /api/user/preferences` - Update user preferences
+
+**Data Model Updates Needed**:
+```typescript
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  studentId: string;
+  school: string;
+  year: string;
+  major: string;
+  minor?: string;
+  gpa?: number;
+  preferences: {
+    notifications: boolean;
+    emailUpdates: boolean;
+    darkMode: boolean;
+    language: string;
+  };
+}
+```
+
+#### 3. Calendar/Schedule API (`/api/calendar`)
+**Current Status**: ❌ Missing - Frontend uses `mockEnrolledCourses` array
+**Required Endpoints**:
+- `GET /api/user/schedule` - Get user's enrolled courses and schedule
+- `POST /api/user/schedule/enroll` - Enroll in a course
+
+**Data Model Updates Needed**:
+```typescript
+interface EnrolledCourse {
+  id: string;
+  name: string;
+  code: string;
+  professor: string;
+  color: string;
+  schedule: {
+    day: number;
+    startTime: string;
+    endTime: string;
+    type: 'lecture' | 'tutorial' | 'lab';
+    location: string;
+  }[];
+}
+```
+
+### Medium Priority (Enhance existing functionality)
+
+#### 4. Sections API Updates
+**Current Status**: ✅ Partially implemented - Backend has basic endpoints
+**Required Updates**:
+- Update response format to match frontend expectations
+- Add proper error handling and validation
+- Ensure snake_case to camelCase transformation
+
+#### 5. AI Chat Integration
+**Current Status**: ❌ Missing - Frontend uses mock AI responses
+**Required Endpoints**:
+- `POST /api/chat/messages` - Send message to AI assistant
+
+### Low Priority (Nice to have)
+
+#### 6. Testing Endpoints
+**Required Endpoints**:
+- `GET /api/test/seed` - Populate with test data
+- `GET /api/test/clear` - Clear all data
+- `POST /api/test/trigger-event` - Manually trigger SSE events
+
+## Data Model Consistency Issues
+
+### Backend vs Frontend Naming Convention
+**Issue**: Backend uses snake_case, frontend expects camelCase
+**Solution**: Either update backend to use camelCase or add transformation layer
+
+**Backend (snake_case)**:
+```python
+class Section(BaseModel):
+    course_id: str
+    time_slot: str
+    available_seats: int
+    total_capacity: int
+    last_updated: datetime
+```
+
+**Frontend (camelCase)**:
+```typescript
+interface Section {
+  courseId: string;
+  timeSlot: string;
+  availableSeats: number;
+  totalCapacity: number;
+  lastUpdated: string;
+}
+```
+
+### Recommended Approach
+1. **Keep backend snake_case** (Python convention)
+2. **Add transformation layer** in frontend API service
+3. **Update shared types** to include both formats
+4. **Add transformation functions** for data conversion
+
+## Implementation Timeline
+
+### Phase 1: Core Data APIs (Week 1)
+- [ ] Course Discovery API (`/api/courses`)
+- [ ] User Profile API (`/api/user`)
+- [ ] Calendar/Schedule API (`/api/calendar`)
+
+### Phase 2: Data Integration (Week 2)
+- [ ] Update frontend to use real APIs
+- [ ] Add data transformation layer
+- [ ] Implement error handling and loading states
+
+### Phase 3: Enhancement (Week 3)
+- [ ] AI Chat integration
+- [ ] Testing endpoints
+- [ ] Performance optimization
 
 ## Notes
 
