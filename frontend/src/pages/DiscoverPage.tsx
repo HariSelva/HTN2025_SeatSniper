@@ -133,7 +133,8 @@ const mockCourses: Course[] = [
     id: "7",
     name: "Advanced Algorithms",
     code: "CS501",
-    description: "Deep dive into advanced algorithmic techniques and complexity analysis for competitive programming.",
+    description:
+      "Deep dive into advanced algorithmic techniques and complexity analysis for competitive programming.",
     professor: "Dr. Robert Chen",
     professorRating: 4.9,
     courseRating: 4.7,
@@ -145,8 +146,8 @@ const mockCourses: Course[] = [
     enrolled: 30,
     capacity: 30,
     tags: ["Algorithms", "Advanced", "Full"],
-    isFull: true
-  }
+    isFull: true,
+  },
 ];
 
 export const DiscoverPage: React.FC = () => {
@@ -200,8 +201,8 @@ export const DiscoverPage: React.FC = () => {
       <div className="mb-8">
         <h1 className="heading-linkedin mb-4">Available Courses</h1>
         <p className="subheading-linkedin mb-6">
-          Discover and monitor course sections for Hack the North 2025. 
-          Get real-time updates on seat availability and never miss an opportunity.
+          Discover and monitor course sections for Hack the North 2025. Get
+          real-time updates on seat availability and never miss an opportunity.
         </p>
 
         {/* Search and Filters */}
@@ -414,6 +415,15 @@ export const DiscoverPage: React.FC = () => {
                 >
                   View Sections
                 </button>
+                {course.isFull ? (
+                  <button className="btn-linkedin flex-1 bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200">
+                    Notify me when available
+                  </button>
+                ) : (
+                  <button className="btn-primary-linkedin flex-1">
+                    Enroll Now
+                  </button>
+                )}
                 <button className="btn-secondary-linkedin">
                   <svg
                     className="w-5 h-5"
