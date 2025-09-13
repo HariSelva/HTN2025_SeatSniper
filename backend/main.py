@@ -30,6 +30,16 @@ async def root():
 async def health_check():
     return {"status": "healthy"}
 
+@app.get("/api/mock/sections/{course_id}")
+async def mock_sections(course_id: str):
+    """Returns dummy course sections so frontend can start."""
+    dummy_sections = [
+        {"id": f"{course_id}-001", "courseId": course_id, "section": "001", "capacity": 100, "availableSeats": 20},
+        {"id": f"{course_id}-002", "courseId": course_id, "section": "002", "capacity": 80, "availableSeats": 0},
+        {"id": f"{course_id}-003", "courseId": course_id, "section": "003", "capacity": 120, "availableSeats": 50},
+    ]
+    return {"sections": dummy_sections}
+
 if __name__ == "__main__":
     import uvicorn
     settings = get_settings()
