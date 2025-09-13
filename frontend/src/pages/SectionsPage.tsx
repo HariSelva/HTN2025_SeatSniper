@@ -1,71 +1,27 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { CourseIntel } from "@/components/ui/CourseIntel";
+import { apiClient, transformToCamelCase } from "@/utils/api";
 
-// Mock data for demonstration
-const mockSections = [
-  {
-    id: "CS101-A",
-    courseId: "CS101",
-    title: "CS101 - Section A",
-    instructor: "Dr. Smith",
-    timeSlot: "9:00 AM - 10:30 AM",
-    days: ["Monday", "Wednesday", "Friday"],
-    availableSeats: 5,
-    totalCapacity: 30,
-    location: "Room 101",
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: "CS101-B",
-    courseId: "CS101",
-    title: "CS101 - Section B",
-    instructor: "Dr. Johnson",
-    timeSlot: "2:00 PM - 3:30 PM",
-    days: ["Tuesday", "Thursday"],
-    availableSeats: 0,
-    totalCapacity: 25,
-    location: "Room 102",
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: "CS101-C",
-    courseId: "CS101",
-    title: "CS101 - Section C",
-    instructor: "Prof. Williams",
-    timeSlot: "11:00 AM - 12:30 PM",
-    days: ["Monday", "Wednesday", "Friday"],
-    availableSeats: 12,
-    totalCapacity: 35,
-    location: "Room 103",
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    courseId: '1',
-    title: 'CS101 - Section D',
-    instructor: 'Dr. Brown',
-    timeSlot: '4:00 PM - 5:30 PM',
-    days: ['Tuesday', 'Thursday'],
-    availableSeats: 0,
-    totalCapacity: 20,
-    location: 'Room 104',
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: '5',
-    courseId: '1',
-    title: 'CS101 - Section E',
-    instructor: 'Prof. Davis',
-    timeSlot: '1:00 PM - 2:30 PM',
-    days: ['Monday', 'Wednesday', 'Friday'],
-    availableSeats: 0,
-    totalCapacity: 28,
-    location: 'Room 105',
-    lastUpdated: new Date().toISOString(),
-  },
-];
+interface Section {
+  id: string;
+  courseId?: string;
+  course_id?: string;
+  title?: string;
+  instructor?: string;
+  timeSlot?: string;
+  time_slot?: string;
+  days?: string[];
+  availableSeats?: number;
+  available_seats?: number;
+  totalCapacity?: number;
+  total_capacity?: number;
+  location?: string;
+  lastUpdated?: string;
+  last_updated?: string;
+  section?: string;
+}
 
 const courseInfo = {
   CS101: {
@@ -121,23 +77,61 @@ const courseInfo = {
 export const SectionsPage: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
+  const [sections, setSections] = useState<Section[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const course = courseId
     ? courseInfo[courseId as keyof typeof courseInfo]
     : null;
 
-  // Filter sections for the current course
-  const courseSections = mockSections.filter((s) => s.courseId === courseId);
+  // Fetch sections from API
+  useEffect(() => {
+    const fetchSections = async () => {
+      if (!courseId) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await apiClient.get(`/api/sections/${courseId}`);
+        // Transform snake_case to camelCase and extract data
+        const transformedData = transformToCamelCase(response.data || []);
+        setSections(transformedData);
+      } catch (err) {
+        setError("Failed to fetch sections");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSections();
+  }, [courseId]);
+
+  // Transform API data to match component expectations
+  const courseSections = sections.map(section => ({
+    id: section.id,
+    courseId: section.courseId || section.course_id,
+    title: section.title || `${section.courseId || section.course_id} - Section ${section.section || '001'}`,
+    instructor: section.instructor || "TBD",
+    timeSlot: section.timeSlot || section.time_slot || "TBD",
+    days: section.days || ["TBD"],
+    availableSeats: section.availableSeats || section.available_seats || 0,
+    totalCapacity: section.totalCapacity || section.total_capacity || 0,
+    location: section.location || "TBD",
+    lastUpdated: section.lastUpdated || section.last_updated || new Date().toISOString(),
+  }));
 
   const totalSections = courseSections.length;
   const availableSections = courseSections.filter(
-    (s) => s.availableSeats > 0
+    (s) => (s.availableSeats || 0) > 0
   ).length;
   const totalSeats = courseSections.reduce(
-    (sum, s) => sum + s.totalCapacity,
+    (sum, s) => sum + (s.totalCapacity || 0),
     0
   );
   const availableSeats = courseSections.reduce(
-    (sum, s) => sum + s.availableSeats,
+    (sum, s) => sum + (s.availableSeats || 0),
     0
   );
 
@@ -169,23 +163,23 @@ export const SectionsPage: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="card-linkedin text-center">
           <div className="text-2xl font-bold text-blue-600">
-            {totalSections}
+            {totalSections || 0}
           </div>
           <div className="text-sm text-gray-600">Total Sections</div>
         </div>
         <div className="card-linkedin text-center">
           <div className="text-2xl font-bold text-green-600">
-            {availableSections}
+            {availableSections || 0}
           </div>
           <div className="text-sm text-gray-600">Available</div>
         </div>
         <div className="card-linkedin text-center">
-          <div className="text-2xl font-bold text-gray-600">{totalSeats}</div>
+          <div className="text-2xl font-bold text-gray-600">{totalSeats || 0}</div>
           <div className="text-sm text-gray-600">Total Seats</div>
         </div>
         <div className="card-linkedin text-center">
           <div className="text-2xl font-bold text-orange-600">
-            {availableSeats}
+            {availableSeats || 0}
           </div>
           <div className="text-sm text-gray-600">Available Seats</div>
         </div>
@@ -205,11 +199,37 @@ export const SectionsPage: React.FC = () => {
           Available Sections
         </h2>
 
-        <div className="space-y-4">
-          {courseSections.map((section) => (
-            <SectionCard key={section.id} section={section} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="card-linkedin">
+            <div className="flex items-center justify-center p-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Loading sections...</span>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="card-linkedin">
+            <div className="text-center p-8">
+              <div className="text-red-600 mb-4">⚠️ {error}</div>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="btn-primary-linkedin"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {courseSections.map((section) => (
+              <SectionCard key={section.id} section={section} />
+            ))}
+            {courseSections.length === 0 && (
+              <div className="card-linkedin text-center p-8">
+                <div className="text-gray-600">No sections found for this course.</div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

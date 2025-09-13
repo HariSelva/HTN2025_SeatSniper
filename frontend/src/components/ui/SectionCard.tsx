@@ -9,8 +9,10 @@ interface SectionCardProps {
 }
 
 export const SectionCard: React.FC<SectionCardProps> = ({ section }) => {
-  const isAvailable = section.availableSeats > 0;
-  const seatPercentage = (section.availableSeats / section.totalCapacity) * 100;
+  const availableSeats = section.availableSeats || 0;
+  const totalCapacity = section.totalCapacity || 1; // Avoid division by zero
+  const isAvailable = availableSeats > 0;
+  const seatPercentage = totalCapacity > 0 ? (availableSeats / totalCapacity) * 100 : 0;
   
   const getAvailabilityColor = () => {
     if (seatPercentage > 50) return 'text-green-600 bg-green-100';
@@ -93,7 +95,7 @@ export const SectionCard: React.FC<SectionCardProps> = ({ section }) => {
           <div className="flex justify-between items-center mb-3">
             <span className="text-sm font-semibold text-gray-700">Seat Availability</span>
             <span className="text-sm text-gray-500">
-              {section.availableSeats} / {section.totalCapacity} seats
+              {availableSeats} / {totalCapacity} seats
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">

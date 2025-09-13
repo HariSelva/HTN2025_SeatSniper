@@ -1,16 +1,25 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Generic, TypeVar
 from datetime import datetime
 
+T = TypeVar('T')
+
+class ApiResponse(BaseModel, Generic[T]):
+    data: T
+    message: Optional[str] = None
+    success: bool = True
+
 class Section(BaseModel):
-    subject: str
-    catalog_number: str
+    id: str
+    course_id: str
     title: str
-    class_number: str
-    component_section: str
-    enrollment_capacity: int
-    enrollment_total: int
+    instructor: str
+    time_slot: str
+    days: List[str]
     available_seats: int
+    total_capacity: int
+    location: str
+    last_updated: str  # ISO 8601 datetime string
 
 class WatchlistItem(BaseModel):
     user_id: str

@@ -25,11 +25,14 @@ async def stream_events():
                 timestamp=datetime.now()
             )
             
-            yield f"data: {json.dumps(event_data.dict())}\n\n"
+            # Use Pydantic's model_dump with mode='json' for proper datetime serialization
+            event_dict = event_data.model_dump(mode='json')
+            
+            yield f"data: {json.dumps(event_dict)}\n\n"
     
     return StreamingResponse(
         event_generator(),
-        media_type="text/plain",
+        media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",

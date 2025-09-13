@@ -38,4 +38,18 @@ export const apiClient = {
   delete: <T>(url: string) => api.delete<ApiResponse<T>>(url).then(res => res.data),
 };
 
+// Helper function to transform snake_case to camelCase
+export const transformToCamelCase = (obj: any): any => {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(transformToCamelCase);
+  if (typeof obj !== 'object') return obj;
+  
+  const transformed: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    transformed[camelKey] = transformToCamelCase(value);
+  }
+  return transformed;
+};
+
 export default api;

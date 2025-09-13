@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
+from core.config import ApiResponse
 
 router = APIRouter()
 
@@ -12,7 +13,7 @@ class LoginResponse(BaseModel):
     token: str
     message: str
 
-@router.post("/login", response_model=LoginResponse)
+@router.post("/login", response_model=ApiResponse[LoginResponse])
 async def login(request: LoginRequest):
     """Development login endpoint"""
     if not request.user_id.strip():
@@ -22,13 +23,15 @@ async def login(request: LoginRequest):
     # For development, we'll just return a simple token
     token = f"dev_token_{request.user_id}"
     
-    return LoginResponse(
+    response_data = LoginResponse(
         user_id=request.user_id,
         token=token,
         message="Login successful"
     )
+    
+    return ApiResponse(data=response_data, success=True)
 
-@router.post("/logout")
+@router.post("/logout", response_model=ApiResponse[dict])
 async def logout():
     """Logout endpoint"""
-    return {"message": "Logout successful"}
+    return ApiResponse(data={"message": "Logout successful"}, success=True)

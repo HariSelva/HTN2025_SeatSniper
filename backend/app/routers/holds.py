@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List
-from core.config import Hold
+from core.config import Hold, ApiResponse
 from datetime import datetime, timedelta
 
 router = APIRouter()
@@ -13,7 +13,7 @@ class HoldRequest(BaseModel):
     user_id: str
     section_id: str
 
-@router.get("/{user_id}", response_model=List[Hold])
+@router.get("/{user_id}", response_model=ApiResponse[List[Hold]])
 async def get_holds(user_id: str):
     """Get user's active holds"""
     now = datetime.now()
@@ -22,9 +22,9 @@ async def get_holds(user_id: str):
         hold for hold in mock_holds 
         if hold.user_id == user_id and hold.expires_at > now
     ]
-    return active_holds
+    return ApiResponse(data=active_holds, success=True)
 
-@router.post("/", response_model=Hold)
+@router.post("/", response_model=ApiResponse[Hold])
 async def claim_hold(request: HoldRequest):
     """Claim a 2-minute hold on a section"""
     now = datetime.now()
@@ -49,14 +49,19 @@ async def claim_hold(request: HoldRequest):
     )
     
     mock_holds.append(new_hold)
-    return new_hold
+    return ApiResponse(data=new_hold, success=True, message="Hold claimed successfully")
 
-@router.delete("/{user_id}/{section_id}")
+@router.delete("/{user_id}/{section_id}", response_model=ApiResponse[dict])
 async def release_hold(user_id: str, section_id: str):
     """Release a hold on a section"""
     global mock_holds
+    initial_count = len(mock_holds)
     mock_holds = [
         hold for hold in mock_holds 
         if not (hold.user_id == user_id and hold.section_id == section_id)
     ]
-    return {"message": "Hold released"}
+    
+    if len(mock_holds) < initial_count:
+        return ApiResponse(data={"message": "Hold released"}, success=True)
+    else:
+        raise HTTPException(status_code=404, detail="Hold not found")

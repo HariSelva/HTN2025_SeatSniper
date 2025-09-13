@@ -30,6 +30,57 @@ interface CourseIntelProps {
   term?: string;
 }
 
+const getMockIntel = (): CourseIntelData => ({
+  course: "CS101",
+  term: "F2025",
+  summary: "CS101 is an introductory computer science course that covers fundamental programming concepts, data structures, and problem-solving techniques. Students learn Python programming and basic algorithms.",
+  workload: {
+    weekly_hours: "8-12 hours",
+    assessment_mix: ["Weekly programming assignments", "Midterm exam", "Final project", "Quizzes"]
+  },
+  difficulty: "Moderate - Good for beginners with some programming experience",
+  tips: [
+    "Start assignments early - they often take longer than expected",
+    "Attend all lectures and take detailed notes",
+    "Practice coding daily, even if just for 30 minutes",
+    "Form study groups with classmates",
+    "Use office hours when you're stuck"
+  ],
+  pitfalls: [
+    "Procrastinating on programming assignments",
+    "Not asking for help when stuck",
+    "Skipping lectures thinking you can learn from slides alone",
+    "Not testing your code thoroughly",
+    "Leaving assignments until the last minute"
+  ],
+  prof_notes: [
+    {
+      name: "Dr. Smith",
+      take: "Excellent professor, very clear explanations and helpful during office hours. Assignments are challenging but fair."
+    },
+    {
+      name: "Prof. Johnson", 
+      take: "Good lecturer but can be strict with deadlines. Make sure to submit assignments on time."
+    }
+  ],
+  sources: [
+    {
+      title: "CS101 Course Review - Fall 2024",
+      subreddit: "university",
+      permalink: "/r/university/comments/abc123/cs101_review",
+      score: 45,
+      age_days: 7
+    },
+    {
+      title: "Tips for CS101 Success",
+      subreddit: "programming",
+      permalink: "/r/programming/comments/def456/cs101_tips",
+      score: 32,
+      age_days: 14
+    }
+  ]
+});
+
 export const CourseIntel: React.FC<CourseIntelProps> = ({
   course,
   term = "F2025",
@@ -47,7 +98,9 @@ export const CourseIntel: React.FC<CourseIntelProps> = ({
         `/api/course-intel?course=${course}&term=${term}`
       );
 
-      if (response.status === "miss" || response.stale) {
+      if (response.status === "error") {
+        setError(response.message || "Failed to fetch course intel");
+      } else if (response.status === "miss" || response.stale) {
         // Trigger refresh if missing or stale
         await refreshIntel();
       } else if (response.intel) {
@@ -74,8 +127,10 @@ export const CourseIntel: React.FC<CourseIntelProps> = ({
         snippets: [],
       });
 
-      if (response.intel) {
+      if (response.ok && response.intel) {
         setIntel(response.intel);
+      } else {
+        setError(response.error || "Failed to refresh course intel");
       }
     } catch (err) {
       setError("Failed to refresh course intel");
@@ -107,9 +162,17 @@ export const CourseIntel: React.FC<CourseIntelProps> = ({
       <div className="card-linkedin">
         <div className="text-center p-8">
           <div className="text-red-600 mb-4">⚠️ {error}</div>
-          <button onClick={fetchIntel} className="btn-primary-linkedin">
-            Retry
-          </button>
+          <div className="text-sm text-gray-600 mb-4">
+            The Course Intel feature is temporarily unavailable due to database connection issues.
+          </div>
+          <div className="space-x-3">
+            <button onClick={fetchIntel} className="btn-primary-linkedin">
+              Retry
+            </button>
+            <button onClick={() => setIntel(getMockIntel())} className="btn-secondary-linkedin">
+              Show Demo Data
+            </button>
+          </div>
         </div>
       </div>
     );
