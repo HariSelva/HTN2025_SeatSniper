@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import csv
 
 BASE_URL = "https://classes.uwaterloo.ca/cgi-bin/cgiwrap/infocour/salook.pl"
 
@@ -36,7 +37,7 @@ def scrape_sections(level="grad", term="1259", subject="ECE", number=""):
         course_subject = cols[0].get_text(strip=True)
         course_number = cols[1].get_text(strip=True)
         course_title = cols[3].get_text(strip=True)
-        course_code = f"{course_subject}{course_number}"  # combine subject+number
+        
         
         # Next row has the subtable with enrollment info
         i += 1
@@ -53,11 +54,13 @@ def scrape_sections(level="grad", term="1259", subject="ECE", number=""):
                     enrolled = int(data_cols[7].get_text(strip=True))
                     capacity = int(data_cols[6].get_text(strip=True))
                     section = {
-                        "course": course_code,
+                        "subject": course_subject,
+                        "catalog_number": course_number,
                         "title": course_title,
-                        "section": data_cols[1].get_text(strip=True),  # Comp Sec
-                        "enrolled": enrolled,
-                        "capacity": capacity,
+                        "class_number": data_cols[0].get_text(strip=True),
+                        "component_section": data_cols[1].get_text(strip=True),  
+                        "enrollment_capacity": capacity,
+                        "enrollment_total": enrolled,
                         "availableSeats": capacity - enrolled
                     }
                     sections.append(section)
@@ -66,6 +69,35 @@ def scrape_sections(level="grad", term="1259", subject="ECE", number=""):
     return sections
 
 if __name__ == "__main__":
-    data = scrape_sections(term="1259", subject="ECE")
-    for sec in data:
-        print(sec)
+    # data = scrape_sections(term="1259", subject="ECE")
+    # for sec in data:
+    #     print(sec)
+
+    departments = ["CS", "ECE", "ME", "MTE"]
+    all_sections = []
+
+    for dept in departments:
+        print(f"Scraping {dept}...")
+        dept_sections = scrape_sections(term="1259", subject=dept)
+        all_sections.extend(dept_sections)
+
+    # Write to CSV
+    output_file = "CourseData.csv"
+    with open(output_file, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "subject",
+                "catalog_number",
+                "title",
+                "class_number",
+                "component_section",
+                "enrollment_capacity",
+                "enrollment_total",
+                "availableSeats",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(all_sections)
+
+    print(f"Scraped {len(all_sections)} sections. Data saved to {output_file}")

@@ -1,0 +1,75 @@
+subject,catalog_number,title,class_number,component_section,enrollment_capacity,enrollment_total,availableSeats
+CS,600,Fundamentals of CS for DS,6985,LEC 001,30,21,9
+CS,638,Principles of Data Mgmt & Use,6988,LEC 001,24,17,7
+CS,645,Software Req Specif & Analysis,6292,LEC 001,8,4,4
+CS,649,Human-Computer Interaction,6954,LEC 001,8,5,3
+CS,651,Data-Intensive Distrib Comput,6650,LEC 001,20,18,2
+CS,654,Distributed Systems,7125,LEC 001,10,3,7
+CS,656,Computer Networks,6339,LEC 001,5,2,3
+CS,666,Algorithm Design & Analysis,6294,LEC 001,15,5,10
+CS,679,Neural Networks,8892,LEC 001,15,15,0
+CS,680,Intro to Machine Learning,6652,LEC 001,35,28,7
+CS,685,Machine Learning,6799,LEC 001,20,9,11
+CS,686,Intro Artificial Intelligence,6295,LEC 001,10,9,1
+CS,697,Grad Research Skills Seminar,7086,SEM 001,24,15,9
+CS,698,Introductory Research Topics,7209,LEC 001,10,2,8
+CS,768,Quantum Information Processing,6665,LEC 001,15,11,4
+CS,770,Numerical Analysis,6679,LEC 001,16,6,10
+CS,794,Optimization for Data Science,7166,LEC 001,70,75,-5
+CS,795,Fundamentals of Optimization,6664,LEC 001,25,8,17
+CS,798,Advanced Research Tpcs,8845,LEC 001,35,25,10
+CS,842,Adv Tpcs in Lang Design & Impl,9270,SEM 001,24,8,16
+CS,846,Adv Tpcs in Software Eng,7059,SEM 001,24,13,11
+CS,848,Adv Tpcs in Data Bases,7058,SEM 001,24,8,16
+CS,854,Adv Tpcs in Computer Systems,7200,SEM 001,36,34,2
+CS,858,Adv Tpcs in Crypto Secur Priv,7060,SEM 001,24,22,2
+CS,860,Adv Tpcs in Algorith & Complex,9247,SEM 001,24,13,11
+CS,867,Adv Topics Quantum Computing,8289,SEM 001,8,5,3
+CS,886,Adv Tpcs in Artificial Intel,7085,SEM 001,24,0,24
+CS,889,Advanced Topics in HCI,7089,SEM 001,25,19,6
+ECE,601,Foundations of Biology in Eng,5151,LEC 001,40,18,22
+ECE,604,Stochastic Processes,4870,LEC 001,40,25,15
+ECE,606,Algorithm Design and Analysis,5006,LEC 001,200,173,27
+ECE,609,EngAnalysis of Living Cells,8859,LEC 001,20,12,8
+ECE,621,Computer Organization,8909,LEC 001,40,22,18
+ECE,630,Physics & Models Semicon Devs,5019,LEC 001,40,25,15
+ECE,635,Fab Nanoscale: Tech & Apps,5540,LEC 001,20,11,9
+ECE,636,Adv Analog Integrated Circuits,4871,LEC 001,40,25,15
+ECE,637,Digital Integrated Circuits,4993,LEC 001,40,28,12
+ECE,650,Methods&Tools for Software Eng,5040,LEC 001,140,0,140
+ECE,655,"Protocol, Sftwr & Issu Mob Sys",5211,LEC 001,140,64,76
+ECE,660,Operation & Control Future IES,5551,LEC 001,40,10,30
+ECE,6604PD,Distributed Generation,8910,LEC 001,35,26,9
+ECE,6613PD,Power System Analysis,8911,LEC 001,35,24,11
+ECE,662,Power Sys Analysis and Control,4916,LEC 001,26,13,13
+ECE,665,High Volt Eng Applications,5633,LEC 001,24,8,16
+ECE,671,Microwave & RF Engineering,5267,LEC 001,40,23,17
+ECE,675,Rad & Prop of Elect Fields,4912,LEC 001,24,12,12
+ECE,682,Multivariable Control Systems,4869,LEC 001,40,19,21
+ECE,699A,MEng Project 1,5289,PRJ 001,20,16,4
+ECE,699B,MEng Project 2,5634,PRJ 001,20,4,16
+ECE,700,Topics Elec & Computer Eng,9113,LEC 001,24,14,10
+ECE,720,Topics Comp & Dig Sys Soft,9140,LEC 001,60,15,45
+ECE,722,Reconfigurable Computing,9153,LEC 001,58,47,11
+ECE,733,Quantum Machine Learning,8915,LEC 001,20,20,0
+ECE,750,Topics in Computer Software,5558,LEC 001,45,36,9
+ECE,751,Dist & Ntwrk Centric Computing,8917,LEC 001,140,101,39
+ECE,770,Top in Antenna & Micro Theory,8918,LEC 001,10,7,3
+ME,600,"Eng Res Mths, Ethcs, Prct",8819,SEM 001,56,55,1
+ME,620,Mechanics of Continua,4990,LEC 001,40,16,24
+ME,628,Fracture Mechanics,8822,LEC 001,32,13,19
+ME,632,Exp Mthds in Materials Eng,5283,LEC 001,45,25,20
+ME,634,Practical Exp Stat Data Vis,9235,LEC 001,24,21,3
+ME,649,Machine and Process Control,5280,LEC 001,40,19,21
+ME,656,"Adv HVAC Sys, Eqpt, Energy Eff",9323,RDG 001,1,1,0
+ME,659,Energy and Environment,5099,LEC 001,30,14,16
+ME,662,Advanced Fluid Mechanics,5316,LEC 001,16,15,1
+ME,673,Fire Modelling,9354,RDG 001,15,4,11
+ME,720,Spec Tpcs in Solid Mechanics,9320,RDG 001,15,2,13
+ME,725,Advanced Stress Analysis,8823,LEC 001,25,12,13
+ME,738,Special Topics in Materials,9152,LEC 001,6,1,5
+ME,744,Computational Intelligence,9236,LEC 001,43,40,3
+ME,749,Special Topics in Machining,9256,RDG 001,10,4,6
+ME,750,Advanced Thermodynamics,5622,LEC 001,25,13,12
+ME,765,Spec Tpcs in Fluid Mechanics,5131,LEC 001,15,8,7
+ME,780,Spec Tpcs in Mechatronics,5559,LEC 001,6,7,-1
