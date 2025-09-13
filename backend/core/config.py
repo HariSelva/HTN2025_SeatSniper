@@ -3,16 +3,14 @@ from typing import List, Optional
 from datetime import datetime
 
 class Section(BaseModel):
-    id: str
-    course_id: str
+    subject: str
+    catalog_number: str
     title: str
-    instructor: str
-    time_slot: str
-    days: List[str]
+    class_number: str
+    component_section: str
+    enrollment_capacity: int
+    enrollment_total: int
     available_seats: int
-    total_capacity: int
-    location: str
-    last_updated: datetime
 
 class WatchlistItem(BaseModel):
     user_id: str
