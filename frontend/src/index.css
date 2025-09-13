@@ -156,7 +156,7 @@
 
   /* Course Cards */
   .course-card {
-    @apply card-linkedin group cursor-pointer;
+    @apply card-linkedin cursor-pointer;
   }
 
   .course-card:hover {
