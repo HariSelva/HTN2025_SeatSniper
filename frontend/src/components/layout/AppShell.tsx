@@ -1,5 +1,4 @@
 import React from 'react';
-import { NavBar } from './NavBar';
 import { StreamIndicator } from '../ui/StreamIndicator';
 
 interface AppShellProps {
@@ -8,12 +7,9 @@ interface AppShellProps {
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavBar />
+    <div className="min-h-screen">
       <StreamIndicator />
-      <main className="container mx-auto px-4 py-8">
-        {children}
-      </main>
+      {children}
     </div>
   );
 };

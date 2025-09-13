@@ -1,40 +1,59 @@
 import React from 'react';
-import { useStream } from '@/hooks/useStream';
+import { useStream } from '../../hooks/useStream';
 
 export const StreamIndicator: React.FC = () => {
-  const { isConnected, connectionStatus } = useStream();
+  const { connectionStatus } = useStream();
 
-  const getStatusColor = () => {
+  const getStatusConfig = () => {
     switch (connectionStatus) {
       case 'connected':
-        return 'bg-green-500';
+        return {
+          color: 'text-green-600',
+          bgColor: 'bg-green-100',
+          dotColor: 'bg-green-500',
+          icon: '🟢',
+          text: 'Connected',
+          pulse: false
+        };
       case 'connecting':
-        return 'bg-yellow-500';
+        return {
+          color: 'text-yellow-600',
+          bgColor: 'bg-yellow-100',
+          dotColor: 'bg-yellow-500',
+          icon: '🟡',
+          text: 'Connecting...',
+          pulse: true
+        };
       case 'disconnected':
-        return 'bg-red-500';
+        return {
+          color: 'text-red-600',
+          bgColor: 'bg-red-100',
+          dotColor: 'bg-red-500',
+          icon: '🔴',
+          text: 'Disconnected',
+          pulse: false
+        };
       default:
-        return 'bg-gray-500';
+        return {
+          color: 'text-gray-600',
+          bgColor: 'bg-gray-100',
+          dotColor: 'bg-gray-500',
+          icon: '⚪',
+          text: 'Unknown',
+          pulse: false
+        };
     }
   };
 
-  const getStatusText = () => {
-    switch (connectionStatus) {
-      case 'connected':
-        return 'Connected';
-      case 'connecting':
-        return 'Connecting...';
-      case 'disconnected':
-        return 'Disconnected';
-      default:
-        return 'Unknown';
-    }
-  };
+  const status = getStatusConfig();
 
   return (
     <div className="fixed top-4 right-4 z-50">
-      <div className="flex items-center space-x-2 bg-white rounded-lg shadow-md px-3 py-2">
-        <div className={`w-3 h-3 rounded-full ${getStatusColor()}`} />
-        <span className="text-sm text-gray-600">{getStatusText()}</span>
+      <div className={`card-linkedin px-4 py-3 ${status.bgColor}`}>
+        <div className="flex items-center space-x-3">
+          <div className={`w-3 h-3 rounded-full ${status.dotColor} ${status.pulse ? 'animate-pulse' : ''}`} />
+          <span className={`text-sm font-medium ${status.color}`}>{status.text}</span>
+        </div>
       </div>
     </div>
   );
