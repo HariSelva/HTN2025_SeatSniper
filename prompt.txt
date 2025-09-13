@@ -1,0 +1,245 @@
+
+
+You are acting as a senior full-stack engineer inside my repo. Wire up the “Course Intel” add-on using **Cohere** (rerank + summarize), **Gemini** (syllabus extraction), and **MongoDB Atlas** (cache). Use FastAPI (Python), PyMongo, and our existing React app.
+
+ASSUMPTIONS
+- Backend root: `backend/` (FastAPI) – if different, adapt paths.
+- Frontend root: `frontend/` (React + Vite/Tailwind).
+- We already have a running server; add new endpoints without breaking existing ones.
+- I’ll provide `COHERE_API_KEY`, `GEMINI_API_KEY`, and `MONGODB_URI` in `.env`.
+
+GOALS
+1) `GET /api/course-intel?course=CS245&term=F2025` → return cached intel from MongoDB (or “miss/stale”).
+2) `POST /api/course-intel/refresh` → (a) rank given snippets with Cohere Rerank, (b) summarize to strict JSON with Cohere Chat, (c) upsert into MongoDB with a 7-day TTL field, (d) return the intel.
+3) `POST /api/syllabus/ingest?course=..&term=..` (multipart) → send PDF/image to Gemini, parse structured syllabus JSON (schedule/assessments/policies), upsert in MongoDB.
+4) Minimal React panel (if not present) to fetch/refresh intel and render Summary, Workload, Tips, Pitfalls, Sources.
+
+DO THIS STEP-BY-STEP
+
+### 0) Dependencies & env
+- Add to backend:
+  ```
+  pip install fastapi uvicorn pydantic pymongo cohere google-generativeai python-dotenv
+  ```
+- Create `backend/.env.example` with:
+  ```
+  COHERE_API_KEY=cQNiTlu7qd2D7nSXpz9Tc0oA1YpsIhKvSU89gDDq
+  GEMINI_API_KEY=AIzaSyDWI1x5M2Fycsiq1xFxDlK8gOCTNoWI38c
+  MONGODB_URI=mongodb+srv://manveerdeveloper_db_user:t7h4IOzL7q4XVtGq@cluster0.g34q22r.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+  ```
+- Ensure `python-dotenv` is loaded on app start.
+
+### 1) Clients & settings
+Create `backend/app/services/clients.py`:
+
+```python
+import os
+from dotenv import load_dotenv; load_dotenv()
+from pymongo import MongoClient
+import cohere, google.generativeai as genai
+
+COHERE_API_KEY = os.getenv("COHERE_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+MONGODB_URI = os.getenv("MONGODB_URI")
+assert COHERE_API_KEY and GEMINI_API_KEY and MONGODB_URI, "Missing env vars"
+
+CO = cohere.Client(COHERE_API_KEY)
+genai.configure(api_key=GEMINI_API_KEY)
+GEM_MODEL = genai.GenerativeModel("gemini-1.5-flash")  # update if needed
+
+MDB = MongoClient(MONGODB_URI).get_database()  # uses db in URI or 'test'
+```
+
+### 2) Mongo indexes (TTL + search)
+Create `backend/scripts/create_indexes.py`:
+
+```python
+from pymongo import MongoClient, ASCENDING, TEXT
+from dotenv import load_dotenv; load_dotenv()
+import os
+
+c = MongoClient(os.environ["MONGODB_URI"])
+db = c.get_database()
+
+db.intel.create_index([("course", ASCENDING), ("term", ASCENDING)], unique=True, name="course_term")
+db.intel.create_index("updatedAt")
+db.intel.create_index("ttl", expireAfterSeconds=0)  # TTL triggers when 'ttl' datetime <= now
+
+db.sources.create_index([("course", ASCENDING), ("term", ASCENDING)])
+db.sources.create_index([("title", TEXT), ("snippet", TEXT)], name="text")
+
+db.syllabi.create_index([("course", ASCENDING), ("term", ASCENDING)], unique=True)
+
+print("Indexes created.")
+```
+
+### 3) Gemini syllabus extraction
+Create `backend/app/services/syllabus.py`:
+
+```python
+from .clients import GEM_MODEL, MDB
+from datetime import datetime, timezone
+import json
+
+PROMPT = """
+Extract STRICT JSON with keys:
+- schedule: [{day, start, end}]
+- assessments: [{name, weight}]
+- policies: [string]
+Return ONLY JSON.
+"""
+
+def ingest_syllabus(course: str, term: str, file_bytes: bytes, mime: str = "application/pdf"):
+    res = GEM_MODEL.generate_content([PROMPT, {"mime_type": mime, "data": file_bytes}])
+    try:
+        data = json.loads(res.text)
+    except Exception:
+        data = {"schedule": [], "assessments": [], "policies": []}
+    data.update({"course": course, "term": term, "extractedAt": datetime.now(timezone.utc)})
+    MDB.syllabi.update_one({"course": course, "term": term}, {"$set": data}, upsert=True)
+    return data
+```
+
+### 4) Cohere rerank + summarize
+Create `backend/app/services/intel.py`:
+
+```python
+from .clients import CO, MDB
+from datetime import datetime, timedelta, timezone
+import json
+
+SUMMARIZE_SYS = """You are creating a course brief for students.
+Return STRICT JSON with keys:
+course, summary, workload:{weekly_hours,assessment_mix[]}, difficulty,
+tips[], pitfalls[], prof_notes[{name,take}], sources[{title,subreddit,permalink,score,age_days}].
+Nothing outside JSON.
+"""
+
+def rerank_docs(query: str, docs: list[str], top_k: int = 12):
+    if not docs:
+        return []
+    out = CO.rerank(model="rerank-3.5", query=query, documents=docs)
+    order = [r.index for r in out.results[:top_k]]
+    return [docs[i] for i in order]
+
+def summarize_to_json(course: str, term: str, official_desc: str, ranked_snippets: list[dict]):
+    ctx = {"course": course, "term": term,
+           "official_description": official_desc,
+           "snippets": ranked_snippets}
+    chat = CO.chat(
+        model="command-r-plus",
+        preamble=SUMMARIZE_SYS,
+        message=f"Summarize into the specified JSON:\n{json.dumps(ctx)[:120000]}"
+    )
+    try:
+        return json.loads(chat.text)
+    except Exception:
+        return {
+            "course": course, "term": term, "summary": "",
+            "workload": {"weekly_hours": "", "assessment_mix": []},
+            "difficulty": "", "tips": [], "pitfalls": [],
+            "prof_notes": [], "sources": []
+        }
+
+def upsert_intel(doc: dict):
+    now = datetime.now(timezone.utc)
+    doc["updatedAt"] = now
+    doc["ttl"] = now + timedelta(days=7)
+    MDB.intel.update_one({"course": doc.get("course"), "term": doc.get("term", "")},
+                         {"$set": doc}, upsert=True)
+```
+
+### 5) Routes
+Create `backend/app/routes/course_intel.py`:
+
+```python
+from fastapi import APIRouter, UploadFile, File
+from datetime import datetime, timezone
+from app.services.clients import MDB
+from app.services.syllabus import ingest_syllabus
+from app.services.intel import rerank_docs, summarize_to_json, upsert_intel
+
+router = APIRouter()
+
+@router.get("/api/course-intel")
+def get_intel(course: str, term: str = ""):
+    doc = MDB.intel.find_one({"course": course, "term": term})
+    if not doc:
+        return {"status": "miss", "stale": False, "intel": None}
+    stale = doc.get("ttl") and doc["ttl"] <= datetime.now(timezone.utc)
+    doc["_id"] = str(doc.get("_id"))
+    return {"status": "ok", "stale": bool(stale), "intel": doc}
+
+@router.post("/api/course-intel/refresh")
+def refresh(course: str, term: str = "", official_desc: str = "", snippets: list[dict] = []):
+    # Expect snippets = [{title,snippet,subreddit,score,url,age_days,permalink?}, ...]
+    docs = [f'{s.get("title","")}\n{s.get("snippet","")}' for s in snippets]
+    ranked_texts = rerank_docs(f"{course} {term} workload difficulty tips", docs)
+    ranked_meta = []
+    for s in snippets:
+        if any(s.get("title","") and s["title"] in t for t in ranked_texts):
+            ranked_meta.append(s)
+    intel = summarize_to_json(course, term, official_desc, ranked_meta)
+    upsert_intel(intel)
+    for s in ranked_meta:
+        MDB.sources.update_one({"course": course, "term": term, "url": s.get("url")},
+                               {"$set": {**s, "course": course, "term": term}}, upsert=True)
+    return {"ok": True, "intel": intel}
+
+@router.post("/api/syllabus/ingest")
+async def syllabus_ingest(course: str, term: str, file: UploadFile = File(...)):
+    b = await file.read()
+    mime = file.content_type or "application/pdf"
+    data = ingest_syllabus(course, term, b, mime=mime)
+    return {"ok": True, "syllabus": data}
+```
+
+### 6) Mount router
+Open `backend/app/main.py` (or equivalent) and add:
+```python
+from app.routes import course_intel
+app.include_router(course_intel.router)
+```
+
+### 7) Run indexes once
+```
+python backend/scripts/create_indexes.py
+```
+
+### 8) Frontend tiny hook (only if missing)
+- On the sections page, fetch `GET /api/course-intel?course=CS245&term=F2025`.
+- If `status==="miss"` or `stale===true`, show “building intel…” and trigger `POST /api/course-intel/refresh` (you can pass empty `snippets` for now; later swap in real Reddit snippets).
+- Render Summary, Workload (weekly hours + difficulty), Tips, Pitfalls, Sources (links).
+
+### 9) Smoke tests (curl)
+```
+# get (likely miss at first)
+curl -s "http://localhost:8080/api/course-intel?course=CS245&term=F2025" | jq
+
+# refresh with sample snippets
+curl -s -X POST "http://localhost:8080/api/course-intel/refresh" \
+ -H "Content-Type": "application/json" \
+ -d '{
+  "course":"CS245","term":"F2025",
+  "official_desc":"Covers propositional/first-order logic...",
+  "snippets":[
+    {"title":"CS245 workload discussion","snippet":"Weekly problem sets; proofs start week 3.","subreddit":"uwaterloo","score":241,"url":"https://reddit.com/1","age_days":42},
+    {"title":"CS245 tips for assignments","snippet":"Start A2 early; practice direct/contradiction proofs.","subreddit":"uwaterloo","score":189,"url":"https://reddit.com/2","age_days":120}
+  ]
+ }' | jq
+
+# get (should now return intel with ttl)
+curl -s "http://localhost:8080/api/course-intel?course=CS245&term=F2025" | jq
+```
+
+### 10) Key checks
+- Env vars loaded: `COHERE_API_KEY`, `GEMINI_API_KEY`, `MONGODB_URI`.
+- Mongo has `intel`, `sources`, `syllabi` collections; `intel.ttl` is a datetime ~7 days ahead.
+- Cohere calls succeed; if keys missing, return a graceful stub (don’t crash).
+- Gemini returns JSON; if parsing fails, store empty arrays and continue.
+
+### 11) What NOT to change
+- Existing endpoints for SeatSniper (watchlist, sections, SSE) must remain intact.
+- No Docker needed; keep local MVP flow.
+
+Proceed to create/modify these files with full content as shown, making minimal changes elsewhere. Then run the index script, start the backend, and verify the curl tests pass. If any path or import differs in my repo, adjust accordingly and still complete the wiring.
