@@ -1,70 +1,405 @@
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  color: white;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+@layer base {
+  * {
+    box-sizing: border-box;
   }
-  a:hover {
-    color: #747bff;
+
+  html {
+    scroll-behavior: smooth;
+    font-size: 14px;
   }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+    line-height: 1.5;
+    color: rgba(0, 0, 0, 0.9);
+    background: #f3f2ef;
+    margin: 0;
+    padding: 0;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.25;
+    color: rgba(0, 0, 0, 0.9);
+    margin: 0;
+  }
+
   button {
-    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-weight: 600;
+    border: none;
+    outline: none;
   }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  input, textarea, select {
+    transition: all 0.15s ease;
+    font-family: inherit;
+    outline: none;
+  }
+}
+
+@layer components {
+  /* LinkedIn-style Cards */
+  .card-linkedin {
+    @apply bg-white rounded-lg border border-gray-200 overflow-hidden transition-all duration-200;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .card-linkedin:hover {
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+  }
+
+  .card-header-linkedin {
+    @apply p-6 border-b border-gray-100;
+  }
+
+  .card-body-linkedin {
+    @apply p-6;
+  }
+
+  /* Navigation */
+  .nav-linkedin {
+    @apply bg-white border-b border-gray-200 sticky top-0 z-50;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Tab Navigation */
+  .tab-container {
+    @apply flex items-center bg-white rounded-lg overflow-hidden;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  .tab-item {
+    @apply flex items-center space-x-3 px-6 py-3 text-sm font-semibold transition-all duration-200 border-r border-gray-200 last:border-r-0 min-w-0;
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .tab-item:hover {
+    @apply bg-gray-50;
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  .tab-item.active {
+    @apply bg-blue-600 text-white;
+  }
+
+  .tab-item.active:hover {
+    @apply bg-blue-700;
+  }
+
+  /* Buttons */
+  .btn-linkedin {
+    @apply px-4 py-2 rounded-full font-semibold text-sm transition-all duration-200 border focus:outline-none inline-flex items-center justify-center;
+    min-height: 32px;
+  }
+
+  .btn-primary-linkedin {
+    @apply btn-linkedin bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-secondary-linkedin {
+    @apply btn-linkedin bg-white text-blue-600 border-blue-600 hover:bg-blue-50;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  }
+
+  .btn-ghost-linkedin {
+    @apply btn-linkedin bg-transparent text-gray-600 border-transparent hover:bg-gray-100;
+  }
+
+  /* Form Elements */
+  .input-linkedin {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all duration-200 bg-white;
+    font-size: 14px;
+  }
+
+  /* Chat Interface */
+  .chat-container {
+    @apply bg-white rounded-lg border border-gray-200 overflow-hidden;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .chat-message {
+    @apply max-w-xs lg:max-w-md px-4 py-3 rounded-2xl;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .chat-message-user {
+    @apply chat-message bg-blue-600 text-white ml-auto;
+  }
+
+  .chat-message-ai {
+    @apply chat-message bg-gray-100 text-gray-900;
+  }
+
+  .chat-input-container {
+    @apply border-t border-gray-200 p-4 bg-gray-50;
+  }
+
+  /* Course Cards */
+  .course-card {
+    @apply card-linkedin cursor-pointer;
+  }
+
+  .course-card:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Typography */
+  .heading-linkedin {
+    @apply text-2xl font-semibold text-gray-900;
+  }
+
+  .subheading-linkedin {
+    @apply text-base text-gray-600 font-normal;
+  }
+
+  .text-linkedin {
+    @apply text-gray-700 text-sm leading-relaxed;
+  }
+
+  /* Status */
+  .status-linkedin {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .status-online {
+    @apply status-linkedin bg-green-100 text-green-800;
+  }
+
+  .status-offline {
+    @apply status-linkedin bg-gray-100 text-gray-600;
+  }
+
+  .status-available {
+    @apply status-linkedin bg-green-100 text-green-800;
+  }
+
+  .status-full {
+    @apply status-linkedin bg-red-100 text-red-800;
+  }
+
+  .status-waiting {
+    @apply status-linkedin bg-yellow-100 text-yellow-800;
+  }
+
+  /* Containers */
+  .container-linkedin {
+    @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .page-container {
+    @apply min-h-screen bg-gray-50;
+  }
+
+  /* Grid Layouts */
+  .grid-linkedin {
+    @apply grid gap-6;
+  }
+
+  .grid-linkedin-2 {
+    @apply grid-linkedin grid-cols-1 lg:grid-cols-2;
+  }
+
+  .grid-linkedin-3 {
+    @apply grid-linkedin grid-cols-1 md:grid-cols-2 lg:grid-cols-3;
+  }
+
+  /* Avatar */
+  .avatar-linkedin {
+    @apply w-10 h-10 rounded-full overflow-hidden border-2 border-white flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Feed Layout */
+  .feed-container {
+    @apply max-w-2xl mx-auto px-6 py-8 space-y-6;
+  }
+
+  /* Quick Actions */
+  .quick-action {
+    @apply p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer text-left;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Calendar Styles */
+  .calendar-grid {
+    @apply grid grid-cols-8 border border-gray-200 rounded-lg overflow-hidden bg-white;
+  }
+
+  .calendar-header {
+    @apply p-4 bg-gray-50 border-b border-gray-200 font-semibold text-gray-900 text-center text-sm;
+  }
+
+  .calendar-cell {
+    @apply p-2 border-r border-gray-100 min-h-12 relative text-xs;
+  }
+
+  .calendar-event {
+    @apply absolute inset-x-1 text-white text-xs p-1 rounded shadow-sm z-10 font-medium;
+  }
+
+  /* Profile Section */
+  .profile-header {
+    @apply flex items-center space-x-4 p-6 bg-white rounded-lg border border-gray-200;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .profile-stats {
+    @apply grid grid-cols-2 gap-4 text-center;
+  }
+
+  .profile-stat {
+    @apply p-4 bg-gray-50 rounded-lg;
+  }
+
+  /* Search Bar */
+  .search-container {
+    @apply relative flex-1 max-w-md;
+  }
+
+  .search-input {
+    @apply w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm;
+  }
+
+  .search-icon {
+    @apply absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4;
+  }
+
+  /* Rating Stars */
+  .rating-stars {
+    @apply flex items-center space-x-1;
+  }
+
+  .star {
+    @apply w-4 h-4;
+  }
+
+  .star-filled {
+    @apply star text-yellow-400;
+  }
+
+  .star-empty {
+    @apply star text-gray-300;
+  }
+
+  /* Progress Bar */
+  .progress-bar {
+    @apply w-full bg-gray-200 rounded-full h-2 overflow-hidden;
+  }
+
+  .progress-fill {
+    @apply h-full bg-blue-600 rounded-full transition-all duration-300;
+  }
+
+  /* Animations */
+  .animate-fade-in-linkedin {
+    animation: fadeInLinkedIn 0.3s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out forwards;
+  }
+}
+
+/* Custom Animations */
+@keyframes fadeInLinkedIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Line Clamp Utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Loading States */
+.skeleton {
+  @apply bg-gray-200 animate-pulse rounded;
+}
+
+.skeleton-text {
+  @apply skeleton h-4 w-full;
+}
+
+.skeleton-circle {
+  @apply skeleton rounded-full;
+}
+
+/* Focus States */
+.focus-visible:focus-visible {
+  @apply ring-2 ring-blue-500 ring-offset-2 outline-none;
 }

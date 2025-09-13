@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { StreamEvent } from '@/types';
+import { StreamEvent } from '../types';
 
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';
 
