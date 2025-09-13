@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, sections, watchlist, holds, stream, tasks
+from app.routes import course_intel
 from core.deps import get_settings
 
 app = FastAPI(title="HTN2025 API", version="1.0.0")
@@ -8,7 +9,7 @@ app = FastAPI(title="HTN2025 API", version="1.0.0")
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],  # Frontend URLs
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -21,6 +22,7 @@ app.include_router(watchlist.router, prefix="/api/watchlist", tags=["watchlist"]
 app.include_router(holds.router, prefix="/api/holds", tags=["holds"])
 app.include_router(stream.router, prefix="/api/stream", tags=["stream"])
 app.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
+app.include_router(course_intel.router)
 
 @app.get("/")
 async def root():
