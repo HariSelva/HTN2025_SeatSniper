@@ -123,6 +123,42 @@ sequenceDiagram
 
     UI -->> User: Shows seat availability, watchlist updates, holds
 ```
+```mermaid
+sequenceDiagram
+    participant User as Student/User
+    participant UI as React Frontend
+    participant API as FastAPI Backend
+    participant Mongo as MongoDB (intel, sources, syllabi)
+    participant Reddit as Reddit Scraper/API
+    participant Cohere as Cohere API
+    participant Gemini as Gemini API
+
+    User ->> UI: Requests course intel (CS245, F2025)
+    UI ->> API: GET /api/course-intel?course=CS245&term=F2025
+    API ->> Mongo: Query intel cache
+    alt Intel found & fresh
+        Mongo -->> API: Return intel JSON
+        API -->> UI: Display summary, workload, tips, pitfalls, sources
+    else Intel missing/stale
+        API ->> Reddit: Scrape threads/posts for course
+        Reddit -->> API: Snippets
+        API ->> Cohere: Rerank snippets by relevance
+        Cohere -->> API: Ordered snippets
+        API ->> Cohere: Summarize snippets → JSON (summary, workload, tips, pitfalls)
+        Cohere -->> API: Summarized intel
+        API ->> Mongo: Upsert intel + sources (with TTL = 7 days)
+        Mongo -->> API: Save confirmation
+        API -->> UI: Display intel (“built intel…” message first, then render)
+    end
+
+    User ->> UI: Uploads syllabus PDF/image
+    UI ->> API: POST /api/syllabus/ingest
+    API ->> Gemini: Extract structured syllabus JSON (schedule, assessments, policies)
+    Gemini -->> API: Structured syllabus
+    API ->> Mongo: Upsert syllabus data
+    Mongo -->> API: Save confirmation
+    API -->> UI: Display syllabus view
+```
 ## 🏗️ Architecture
 
 ### Frontend (React + TypeScript)
