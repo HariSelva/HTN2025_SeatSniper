@@ -7,6 +7,7 @@ export interface Section {
   days: string[];
   availableSeats: number;
   totalCapacity: number;
+  enrollmentTotal: number;
   location: string;
   lastUpdated: string;
 }

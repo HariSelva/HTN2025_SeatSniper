@@ -121,7 +121,9 @@ export const DiscoverPage: React.FC = () => {
             const existingCourse = courseMap.get(courseCode)!;
             existingCourse.enrolled += apiCourse.enrollmentTotal;
             existingCourse.capacity += apiCourse.enrollmentCapacity;
-            existingCourse.isFull = existingCourse.enrolled >= existingCourse.capacity;
+            // Calculate total available seats across all sections
+            const totalAvailableSeats = (existingCourse.capacity - existingCourse.enrolled) + apiCourse.availableSeats;
+            existingCourse.isFull = totalAvailableSeats <= 0;
           }
         });
         
@@ -442,7 +444,15 @@ export const DiscoverPage: React.FC = () => {
                   View Sections
                 </button>
                 {course.isFull ? (
-                  <button className="btn-linkedin flex-1 bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200">
+                  <button 
+                    className="btn-linkedin flex-1 bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 cursor-not-allowed opacity-75 transition-all duration-150 active:scale-95 active:bg-gray-200"
+                    disabled
+                    onClick={(e) => {
+                      // Just animation, no function
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
                     Notify me when available
                   </button>
                 ) : (

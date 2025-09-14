@@ -1,20 +1,39 @@
 import React from 'react';
 import { useAppStore } from '@/store';
+import { apiClient } from '@/utils/api';
 
 interface NotifyButtonProps {
   sectionId: string;
 }
 
 export const NotifyButton: React.FC<NotifyButtonProps> = ({ sectionId }) => {
-  const { notifications, addNotification, removeNotification } = useAppStore();
+  const { notifications, addNotification, removeNotification, user } = useAppStore();
   
   const isNotifying = notifications.some(notification => notification.sectionId === sectionId);
   
-  const handleToggle = () => {
-    if (isNotifying) {
-      removeNotification(sectionId);
-    } else {
-      addNotification(sectionId);
+  const handleToggle = async () => {
+    if (!user) {
+      alert('Please log in to set up notifications');
+      return;
+    }
+
+    try {
+      if (isNotifying) {
+        // Remove notification from backend
+        await apiClient.delete(`/api/notifications/${user.id}/${sectionId}`);
+        removeNotification(sectionId);
+      } else {
+        // Add notification to backend
+        await apiClient.post('/api/notifications/', {
+          user_id: user.id,
+          section_id: sectionId,
+          user_email: user.email || `${user.id}@example.com` // Fallback email if not provided
+        });
+        addNotification(sectionId);
+      }
+    } catch (error) {
+      console.error('Error updating notification:', error);
+      alert('Failed to update notification. Please try again.');
     }
   };
 

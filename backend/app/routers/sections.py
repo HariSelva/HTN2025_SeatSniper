@@ -22,6 +22,7 @@ dynamodb = boto3.resource(
 
 table_name = f"course_sections"
 table = dynamodb.Table(table_name)
+notifications_table = dynamodb.Table("user_notifications")
 
 def parse_section(item: dict) -> Section:
     """Convert DynamoDB item to Section model"""
@@ -38,15 +39,24 @@ def parse_section(item: dict) -> Section:
     
 def send_email(to_email: str, subject: str, body: str):
     """Send an email notification (basic SMTP example)"""
+    print(f"Attempting to send email to: {to_email}")
+    print(f"Subject: {subject}")
+    print(f"Body: {body}")
+    
     msg = MIMEText(body)
     msg["Subject"] = subject
     msg["From"] = EMAIL_USER
     msg["To"] = to_email
 
-    with smtplib.SMTP("smtp.gmail.com", 587) as server:
-        server.starttls()
-        server.login(EMAIL_USER, EMAIL_PASS)
-        server.sendmail(EMAIL_USER, [to_email], msg.as_string())
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(EMAIL_USER, EMAIL_PASS)
+            server.sendmail(EMAIL_USER, [to_email], msg.as_string())
+            print(f"Email sent successfully to {to_email}")
+    except Exception as e:
+        print(f"Failed to send email to {to_email}: {e}")
+        raise
         
 
 async def send_email_async(*args, **kwargs):
@@ -54,6 +64,7 @@ async def send_email_async(*args, **kwargs):
     await loop.run_in_executor(None, send_email, *args, **kwargs)
 
 cached_sections: dict[str, dict] = {}
+previous_sections: dict[str, int] = {}
 
 async def poll_dynamodb(interval: int = 1):
     global previous_sections
@@ -81,15 +92,23 @@ async def poll_dynamodb(interval: int = 1):
 
                 prev_available = previous_sections.get(section_id, 0)
                 
+                # Send notifications when seats go from <=0 to >0 (seats become available)
                 if prev_available <= 0 and available > 0:
-                    print(item)
-                    subject = f"Seat Opened in {item['subject']} {item['catalog_number']}"
-                    body = (
-                        f"Course {item['subject']} {item['catalog_number']} "
-                        f"({item['class_number']}) now has {available} seats available!"
-                    )
-                    await send_email_async(EMAIL_USER, subject, body)
-                    print(f"Notification sent: {subject}")
+                    print(f"Seat availability changed for section {section_id}: {prev_available} -> {available} seats available")
+                    # Send notification to default email regardless of user subscription
+                    try:
+                        subject = f"Seat Available in {item['subject']} {item['catalog_number']}"
+                        body = (
+                            f"Good news! Course {item['subject']} {item['catalog_number']} "
+                            f"({item['class_number']}) now has {available} seat{'s' if available > 1 else ''} available!\n\n"
+                            f"Enroll now to secure your spot."
+                        )
+                        
+                        # Send notification to default email
+                        await send_email_async(EMAIL_USER, subject, body)
+                        print(f"Notification sent to {EMAIL_USER}: {subject}")
+                    except Exception as e:
+                        print(f"Error sending notifications for section {section_id}: {e}")
 
                 previous_sections[section_id] = available
 
@@ -103,7 +122,6 @@ def start_polling():
 
 router = APIRouter()
 last_checked = datetime.min
-previous_sections: dict[str, int] = {}
 
 @router.get("/{course_id}")
 async def get_sections(course_id: str):
@@ -123,14 +141,41 @@ async def get_sections(course_id: str):
 @router.get("/", response_model=List[Section])
 async def get_all_sections():
     try:
+        # Always try to get fresh data from DynamoDB if cache is empty
         if not cached_sections:
+            print("Cache is empty, fetching fresh data from DynamoDB...")
             response = table.scan()
             items = response.get("Items", [])
             for item in items:
                 section_id = item["class_number"]
                 cached_sections[section_id] = item
+            print(f"Loaded {len(cached_sections)} sections into cache")
 
         sections = [parse_section(item) for item in cached_sections.values()]
         return sections
     except Exception as e:
+        print(f"Error fetching sections: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch sections: {e}")
+
+@router.post("/refresh")
+async def refresh_sections_cache():
+    """Manually refresh the sections cache from DynamoDB"""
+    try:
+        global cached_sections
+        print("Manually refreshing sections cache...")
+        response = table.scan()
+        items = response.get("Items", [])
+        
+        # Clear existing cache
+        cached_sections.clear()
+        
+        # Populate with fresh data
+        for item in items:
+            section_id = item["class_number"]
+            cached_sections[section_id] = item
+            
+        print(f"Refreshed cache with {len(cached_sections)} sections")
+        return {"message": f"Successfully refreshed cache with {len(cached_sections)} sections"}
+    except Exception as e:
+        print(f"Error refreshing cache: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to refresh cache: {e}")

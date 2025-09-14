@@ -2,7 +2,6 @@ import React from 'react';
 import { Section } from '@/types';
 import { WatchButton } from './WatchButton';
 import { HoldButton } from './HoldButton';
-import { NotifyButton } from './NotifyButton';
 
 interface SectionCardProps {
   section: Section;
@@ -11,7 +10,7 @@ interface SectionCardProps {
 export const SectionCard: React.FC<SectionCardProps> = ({ section }) => {
   const availableSeats = section.availableSeats || 0;
   const totalCapacity = section.totalCapacity || 1; // Avoid division by zero
-  const isAvailable = availableSeats > 0;
+  const isFullyBooked = availableSeats <= 0; // Show notify button when no seats available
   const seatPercentage = totalCapacity > 0 ? (availableSeats / totalCapacity) * 100 : 0;
   
   const getAvailabilityColor = () => {
@@ -121,10 +120,23 @@ export const SectionCard: React.FC<SectionCardProps> = ({ section }) => {
         {/* Action Buttons */}
         <div className="flex gap-3">
           <WatchButton sectionId={section.id} />
-          {isAvailable ? (
-            <HoldButton sectionId={section.id} />
+          {isFullyBooked ? (
+            <button 
+              className="flex-1 btn-premium bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 cursor-not-allowed opacity-75 transition-all duration-150 active:scale-95 active:bg-gray-200"
+              disabled
+              onClick={(e) => {
+                // Just animation, no function
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 0 0-15 0v5h5l-5 5-5-5h5v-5a7.5 7.5 0 0 0 15 0v5z" />
+              </svg>
+              Notify me when available
+            </button>
           ) : (
-            <NotifyButton sectionId={section.id} />
+            <HoldButton sectionId={section.id} />
           )}
         </div>
       </div>
