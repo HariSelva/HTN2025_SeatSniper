@@ -21,12 +21,8 @@ DO THIS STEP-BY-STEP
   ```
   pip install fastapi uvicorn pydantic pymongo cohere google-generativeai python-dotenv
   ```
-- Create `backend/.env.example` with:
-  ```
-  COHERE_API_KEY=cQNiTlu7qd2D7nSXpz9Tc0oA1YpsIhKvSU89gDDq
-  GEMINI_API_KEY=AIzaSyDWI1x5M2Fycsiq1xFxDlK8gOCTNoWI38c
-  MONGODB_URI=mongodb+srv://manveerdeveloper_db_user:t7h4IOzL7q4XVtGq@cluster0.g34q22r.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-  ```
+- Create `backend/.env.example` with
+  
 - Ensure `python-dotenv` is loaded on app start.
 
 ### 1) Clients & settings
