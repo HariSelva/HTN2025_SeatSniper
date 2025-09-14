@@ -64,7 +64,7 @@ export const ProfilePage: React.FC = () => {
 
   const stats = [
     { label: 'Courses Enrolled', value: '6', icon: '📚' },
-    { label: 'Credits Completed', value: '72', icon: '🎓' },
+    // { label: 'Credits Completed', value: '72', icon: '🎓' }, // Disabled - no real data
     { label: 'Current GPA', value: profile.gpa?.toFixed(2) || 'N/A', icon: '📊' },
     { label: 'Semester', value: 'Fall 2024', icon: '📅' }
   ];

@@ -108,7 +108,7 @@ export const DiscoverPage: React.FC = () => {
               time: "TBD", // Not available in API
               days: ["TBD"], // Not available in API
               location: "TBD", // Not available in API
-              credits: 3, // Default value
+              credits: 0, // No real data available
               prerequisites: [],
               enrolled: apiCourse.enrollmentTotal,
               capacity: apiCourse.enrollmentCapacity,
@@ -279,10 +279,14 @@ export const DiscoverPage: React.FC = () => {
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-500">Credits</div>
-                  <div className="text-lg font-semibold text-gray-900">
-                    {course.credits}
-                  </div>
+                  {course.credits > 0 && (
+                    <>
+                      <div className="text-xs text-gray-500">Credits</div>
+                      <div className="text-lg font-semibold text-gray-900">
+                        {course.credits}
+                      </div>
+                    </>
+                  )}
                   {course.isFull && (
                     <div className="mt-2">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -294,15 +298,17 @@ export const DiscoverPage: React.FC = () => {
               </div>
 
               {/* Professor Info */}
-              <div className="mb-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    {course.professor}
-                  </span>
-                  <div className="text-xs text-gray-500">Professor Rating</div>
+              {course.professor && course.professor !== "TBD" && (
+                <div className="mb-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">
+                      {course.professor}
+                    </span>
+                    <div className="text-xs text-gray-500">Professor Rating</div>
+                  </div>
+                  {renderStarRating(course.professorRating)}
                 </div>
-                {renderStarRating(course.professorRating)}
-              </div>
+              )}
             </div>
 
             <div className="card-body-linkedin">
@@ -312,22 +318,24 @@ export const DiscoverPage: React.FC = () => {
 
               {/* Course Details */}
               <div className="space-y-3 mb-6">
-                <div className="flex items-center text-sm">
-                  <svg
-                    className="w-4 h-4 text-gray-400 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span className="text-gray-700">{course.time}</span>
-                </div>
+                {course.time && course.time !== "TBD" && (
+                  <div className="flex items-center text-sm">
+                    <svg
+                      className="w-4 h-4 text-gray-400 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span className="text-gray-700">{course.time}</span>
+                  </div>
+                )}
 
                 <div className="flex items-center text-sm">
                   <svg
@@ -348,22 +356,24 @@ export const DiscoverPage: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="flex items-center text-sm">
-                  <svg
-                    className="w-4 h-4 text-gray-400 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                  </svg>
-                  <span className="text-gray-700">{course.location}</span>
-                </div>
+                {course.location && course.location !== "TBD" && (
+                  <div className="flex items-center text-sm">
+                    <svg
+                      className="w-4 h-4 text-gray-400 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                    </svg>
+                    <span className="text-gray-700">{course.location}</span>
+                  </div>
+                )}
               </div>
 
               {/* Enrollment Status */}
