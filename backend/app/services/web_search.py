@@ -14,22 +14,22 @@ class WebSearchService:
         # Search URL for Google Custom Search
         self.google_search_url = "https://www.googleapis.com/customsearch/v1"
         
-    async def search_web(self, query: str, num_results: int = 5) -> List[Dict[str, Any]]:
+    def search_web(self, query: str, num_results: int = 5) -> List[Dict[str, Any]]:
         """
         Search the web for course-related information
         Returns results with clear marking for web sources
         """
         results = []
         
-        # Try Google Custom Search first, then SerpAPI as fallback
         try:
+            # Try Google Custom Search first, then SerpAPI as fallback
             if self.search_api_key and self.search_engine_id:
-                results = await self._search_google(query, num_results)
+                results = self._search_google(query, num_results)
             elif self.serpapi_key:
-                results = await self._search_serpapi(query, num_results)
+                results = self._search_serpapi(query, num_results)
             else:
                 # Fallback to a simple web search simulation
-                results = await self._search_fallback(query, num_results)
+                results = self._search_fallback(query, num_results)
                 
         except Exception as e:
             print(f"Web search error: {e}")
@@ -43,7 +43,7 @@ class WebSearchService:
         
         return results
     
-    async def _search_google(self, query: str, num_results: int) -> List[Dict[str, Any]]:
+    def _search_google(self, query: str, num_results: int) -> List[Dict[str, Any]]:
         """Search using Google Custom Search API"""
         try:
             # Enhance query for educational content
@@ -79,7 +79,7 @@ class WebSearchService:
             print(f"Google search error: {e}")
             return []
     
-    async def _search_serpapi(self, query: str, num_results: int) -> List[Dict[str, Any]]:
+    def _search_serpapi(self, query: str, num_results: int) -> List[Dict[str, Any]]:
         """Search using SerpAPI"""
         try:
             enhanced_query = self._enhance_query_for_education(query)
@@ -113,7 +113,7 @@ class WebSearchService:
             print(f"SerpAPI search error: {e}")
             return []
     
-    async def _search_fallback(self, query: str, num_results: int) -> List[Dict[str, Any]]:
+    def _search_fallback(self, query: str, num_results: int) -> List[Dict[str, Any]]:
         """Fallback search method when APIs are not available"""
         # This is a mock implementation for development
         # In production, you might want to use other search APIs or scrapers
@@ -176,23 +176,23 @@ class WebSearchService:
         
         return enhanced_query
     
-    async def search_course_specific(self, course_code: str, university: str = "") -> List[Dict[str, Any]]:
+    def search_course_specific(self, course_code: str, university: str = "") -> List[Dict[str, Any]]:
         """
         Search for specific course information
         """
         query = f"{course_code} {university} course syllabus prerequisites"
-        return await self.search_web(query, num_results=3)
+        return self.search_web(query, num_results=3)
     
-    async def search_course_recommendations(self, subject: str, level: str = "") -> List[Dict[str, Any]]:
+    def search_course_recommendations(self, subject: str, level: str = "") -> List[Dict[str, Any]]:
         """
         Search for course recommendation resources
         """
         query = f"{subject} {level} course recommendations best courses"
-        return await self.search_web(query, num_results=5)
+        return self.search_web(query, num_results=5)
     
-    async def search_academic_planning(self, major: str, year: str = "") -> List[Dict[str, Any]]:
+    def search_academic_planning(self, major: str, year: str = "") -> List[Dict[str, Any]]:
         """
         Search for academic planning resources
         """
         query = f"{major} {year} academic planning course selection"
-        return await self.search_web(query, num_results=4)
+        return self.search_web(query, num_results=4)

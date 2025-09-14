@@ -8,38 +8,43 @@ class DatabaseSearchService:
         self.intel_collection = MDB.intel
         self.sources_collection = MDB.sources
         self.syllabi_collection = MDB.syllabi
-        self.sections_collection = MDB.sections  # Assuming sections are also stored in MongoDB
+        self.sections_collection = MDB.sections
     
-    async def search_course_data(self, query: str) -> List[Dict[str, Any]]:
+    def search_course_data(self, query: str) -> List[Dict[str, Any]]:
         """
         Search for course-related information in the database
         Returns relevant course intel, syllabi, and section data
         """
         results = []
         
-        # Extract course codes from query (e.g., CS245, MATH101)
-        course_codes = self._extract_course_codes(query)
-        
-        # Search course intel
-        intel_results = self._search_course_intel(query, course_codes)
-        results.extend(intel_results)
-        
-        # Search syllabi
-        syllabi_results = self._search_syllabi(query, course_codes)
-        results.extend(syllabi_results)
-        
-        # Search course sources/Reddit data
-        sources_results = self._search_sources(query, course_codes)
-        results.extend(sources_results)
-        
-        # Search sections data
-        sections_results = self._search_sections(query, course_codes)
-        results.extend(sections_results)
-        
-        # Remove duplicates and rank by relevance
-        unique_results = self._deduplicate_and_rank(results, query)
-        
-        return unique_results[:10]  # Return top 10 results
+        try:
+            # Extract course codes from query (e.g., CS245, MATH101)
+            course_codes = self._extract_course_codes(query)
+            
+            # Search course intel
+            intel_results = self._search_course_intel(query, course_codes)
+            results.extend(intel_results)
+            
+            # Search syllabi
+            syllabi_results = self._search_syllabi(query, course_codes)
+            results.extend(syllabi_results)
+            
+            # Search course sources/Reddit data
+            sources_results = self._search_sources(query, course_codes)
+            results.extend(sources_results)
+            
+            # Search sections data
+            sections_results = self._search_sections(query, course_codes)
+            results.extend(sections_results)
+            
+            # Remove duplicates and rank by relevance
+            unique_results = self._deduplicate_and_rank(results, query)
+            
+            return unique_results[:10]  # Return top 10 results
+            
+        except Exception as e:
+            print(f"Database search error: {e}")
+            return []
     
     def _extract_course_codes(self, query: str) -> List[str]:
         """Extract potential course codes from the query"""
@@ -245,7 +250,7 @@ class DatabaseSearchService:
     def _calculate_relevance(self, query: str, doc: Dict) -> float:
         """Calculate relevance score for search results"""
         query_lower = query.lower()
-        doc_text = json.dumps(doc).lower()
+        doc_text = str(doc).lower()
         
         # Simple relevance scoring based on keyword matches
         query_words = set(query_lower.split())

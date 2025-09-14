@@ -39,7 +39,7 @@ class CourseRecommendationService:
             print(f"Error generating recommendations: {e}")
             return []
     
-    async def generate_detailed_recommendations(
+    def generate_detailed_recommendations(
         self, 
         goals: List[str], 
         time_constraints: Dict[str, Any],
@@ -278,7 +278,13 @@ Always provide specific course codes, realistic expectations, and clear reasonin
                 "title": "AI Generated Recommendation",
                 "description": ai_response,
                 "match_score": 7,
-                "rationale": "AI-generated recommendation based on your query"
+                "rationale": "AI-generated recommendation based on your query",
+                "prerequisites": [],
+                "estimated_workload": "Unknown",
+                "best_semester": "Any",
+                "potential_challenges": [],
+                "benefits": [],
+                "has_detailed_info": False
             }]
     
     def _enhance_recommendations_with_db(self, recommendations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

@@ -45,7 +45,7 @@ course_rec = CourseRecommendationService()
 @router.post("/chat", response_model=ApiResponse[ChatResponse])
 async def chat_with_ai(request: ChatRequest):
     """
-    Main chat endpoint that integrates GPT-5 with database and web search
+    Main chat endpoint that integrates GPT with database and web search
     """
     try:
         # Step 1: Search database first
@@ -54,10 +54,10 @@ async def chat_with_ai(request: ChatRequest):
         # Step 2: If insufficient database results, search web
         web_results = []
         if not db_results or len(db_results) < 3:
-            web_results = await web_search.search_web(request.message)
+            web_results = web_search.search_web(request.message)
         
-        # Step 3: Generate response using ChatGPT-5 with context
-        response = await chat_service.generate_response(
+        # Step 3: Generate response using ChatGPT with context
+        response = chat_service.generate_response(
             message=request.message,
             conversation_id=request.conversation_id,
             database_context=db_results,
@@ -89,7 +89,18 @@ async def chat_with_ai(request: ChatRequest):
         )
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Chat service error: {str(e)}")
+        print(f"Chat error: {e}")
+        # Return a fallback response instead of raising an exception
+        return ApiResponse(
+            data=ChatResponse(
+                message="I'm sorry, I encountered an error. Please try again.",
+                conversation_id=request.conversation_id or "error",
+                sources=[],
+                recommendations=[],
+                search_info={'error': str(e)}
+            ),
+            success=False
+        )
 
 @router.post("/recommend-courses", response_model=ApiResponse[List[Dict[str, Any]]])
 async def recommend_courses(request: CourseRecommendationRequest):
@@ -97,7 +108,7 @@ async def recommend_courses(request: CourseRecommendationRequest):
     Generate course recommendations based on user goals and constraints
     """
     try:
-        recommendations = await course_rec.generate_detailed_recommendations(
+        recommendations = course_rec.generate_detailed_recommendations(
             goals=request.goals,
             time_constraints=request.time_constraints,
             academic_level=request.academic_level,
@@ -110,7 +121,11 @@ async def recommend_courses(request: CourseRecommendationRequest):
         )
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Recommendation service error: {str(e)}")
+        print(f"Recommendation error: {e}")
+        return ApiResponse(
+            data=[],
+            success=False
+        )
 
 @router.get("/conversation/{conversation_id}")
 async def get_conversation_history(conversation_id: str):
@@ -118,10 +133,11 @@ async def get_conversation_history(conversation_id: str):
     Retrieve conversation history for a given conversation ID
     """
     try:
-        history = await chat_service.get_conversation_history(conversation_id)
+        history = chat_service.get_conversation_history(conversation_id)
         return ApiResponse(data=history, success=True)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve conversation: {str(e)}")
+        print(f"Get conversation error: {e}")
+        return ApiResponse(data=[], success=False)
 
 @router.delete("/conversation/{conversation_id}")
 async def clear_conversation(conversation_id: str):
@@ -129,7 +145,8 @@ async def clear_conversation(conversation_id: str):
     Clear conversation history for a given conversation ID
     """
     try:
-        await chat_service.clear_conversation(conversation_id)
+        chat_service.clear_conversation(conversation_id)
         return ApiResponse(data={"message": "Conversation cleared"}, success=True)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to clear conversation: {str(e)}")
+        print(f"Clear conversation error: {e}")
+        return ApiResponse(data={"message": "Failed to clear conversation"}, success=False)

@@ -103,32 +103,51 @@ export const ChatWithAIPage: React.FC = () => {
 
   // Component to render course recommendations
   const CourseRecommendations = ({ recommendations }: { recommendations: CourseRecommendation[] }) => {
-    if (!recommendations || recommendations.length === 0) return null;
-    
-    return (
-      <div className="mt-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-400">
-        <h4 className="font-semibold text-green-800 mb-2">🎯 Course Recommendations</h4>
-        <div className="space-y-3">
-          {recommendations.map((rec, index) => (
-            <div key={index} className="border border-green-200 rounded p-3 bg-white">
-              <div className="flex justify-between items-start mb-2">
-                <h5 className="font-medium text-green-800">{rec.courseCode} - {rec.title}</h5>
-                <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded">
-                  Match: {rec.matchScore}/10
-                </span>
-              </div>
-              <p className="text-sm text-gray-700 mb-2">{rec.description}</p>
-              <p className="text-sm text-green-700 mb-2"><strong>Why:</strong> {rec.rationale}</p>
-              {rec.prerequisites.length > 0 && (
-                <p className="text-xs text-gray-600">
-                  <strong>Prerequisites:</strong> {rec.prerequisites.join(', ')}
-                </p>
-              )}
-            </div>
-          ))}
+    try {
+      if (!recommendations || !Array.isArray(recommendations) || recommendations.length === 0) return null;
+      
+      return (
+        <div className="mt-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-400">
+          <h4 className="font-semibold text-green-800 mb-2">🎯 Course Recommendations</h4>
+          <div className="space-y-3">
+            {recommendations.map((rec, index) => {
+              // Safely extract values with fallbacks
+              const courseCode = rec?.courseCode || rec?.course_code || 'N/A';
+              const title = rec?.title || 'N/A';
+              const description = rec?.description || 'No description available';
+              const rationale = rec?.rationale || 'No rationale provided';
+              const matchScore = rec?.matchScore || rec?.match_score || 0;
+              const prerequisites = rec?.prerequisites;
+              
+              return (
+                <div key={index} className="border border-green-200 rounded p-3 bg-white">
+                  <div className="flex justify-between items-start mb-2">
+                    <h5 className="font-medium text-green-800">{courseCode} - {title}</h5>
+                    <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded">
+                      Match: {matchScore}/10
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-2">{description}</p>
+                  <p className="text-sm text-green-700 mb-2"><strong>Why:</strong> {rationale}</p>
+                  {prerequisites && Array.isArray(prerequisites) && prerequisites.length > 0 && (
+                    <p className="text-xs text-gray-600">
+                      <strong>Prerequisites:</strong> {prerequisites.join(', ')}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
-    );
+      );
+    } catch (error) {
+      console.error('Error rendering course recommendations:', error);
+      return (
+        <div className="mt-3 p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
+          <p className="text-yellow-800">Unable to display course recommendations at this time.</p>
+        </div>
+      );
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
