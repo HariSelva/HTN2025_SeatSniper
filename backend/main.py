@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, sections, watchlist, holds, stream, tasks
+from app.routers import auth, sections, watchlist, holds, stream, tasks, chat
 from app.routes import course_intel
 from core.deps import get_settings
 
@@ -23,6 +23,7 @@ app.include_router(holds.router, prefix="/api/holds", tags=["holds"])
 app.include_router(stream.router, prefix="/api/stream", tags=["stream"])
 app.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
 app.include_router(course_intel.router)
+app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 
 @app.get("/")
 async def root():

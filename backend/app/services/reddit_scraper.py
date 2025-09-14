@@ -60,9 +60,50 @@ def extract_snippet(text: str, max_length: int = 200) -> str:
     
     return snippet + "..."
 
+def extract_department_and_number(course_code: str) -> tuple:
+    """Extract department and course number from course code"""
+    import re
+    match = re.match(r'^([A-Z]+)(\d+[A-Z]*)$', course_code.upper())
+    if match:
+        return match.group(1), match.group(2)
+    return course_code, ""
+
+def get_search_terms(course_code: str) -> List[str]:
+    """Generate multiple search terms for better coverage"""
+    dept, num = extract_department_and_number(course_code)
+    
+    # Create various search term combinations
+    search_terms = [
+        course_code,  # Original course code
+        f"{dept} {num}",  # Department and number with space
+        f"{dept}{num}",  # Department and number without space
+        dept,  # Just department
+        f"{dept} course",  # Department + course
+        f"{dept} class",  # Department + class
+    ]
+    
+    # Add department-specific variations for common departments
+    dept_variations = {
+        "CS": ["computer science", "programming", "software"],
+        "MATH": ["mathematics", "math", "calculus", "algebra"],
+        "ENG": ["engineering", "engineer"],
+        "PHYS": ["physics", "physical"],
+        "CHEM": ["chemistry", "chemical"],
+        "BIOL": ["biology", "biological"],
+        "ECON": ["economics", "economic"],
+        "PSYC": ["psychology", "psych"],
+        "STAT": ["statistics", "stats"],
+    }
+    
+    if dept in dept_variations:
+        search_terms.extend([f"{var} {num}" for var in dept_variations[dept][:2]])
+        search_terms.extend(dept_variations[dept][:2])
+    
+    return search_terms
+
 def search_reddit_for_course(course_code: str, limit: int = 20) -> List[Dict]:
     """
-    Search Reddit for discussions about a specific course - FAST VERSION
+    Search Reddit for discussions about a specific course - COMPREHENSIVE VERSION
     
     Args:
         course_code: Course code (e.g., "CS101", "MATH235")
@@ -75,36 +116,72 @@ def search_reddit_for_course(course_code: str, limit: int = 20) -> List[Dict]:
         print("Reddit client not available, returning empty data")
         return []
     
-    print(f"Fast Reddit search for {course_code}")
+    print(f"Comprehensive Reddit search for {course_code}")
     snippets = []
+    seen_urls = set()  # Avoid duplicates
     
     try:
-        # Only search the most relevant subreddit (uwaterloo) for speed
-        subreddit_name = "uwaterloo"
-        subreddit = reddit.subreddit(subreddit_name)
+        # Search across multiple university subreddits
+        search_subreddits = ["uwaterloo", "mcgill", "uoft", "ubc", "queens", "western", "carleton"]
+        search_terms = get_search_terms(course_code)
         
-        # Single search term for speed
-        search_term = f"{course_code}"
+        for subreddit_name in search_subreddits:
+            try:
+                subreddit = reddit.subreddit(subreddit_name)
+                
+                # Try multiple search terms for better coverage
+                for search_term in search_terms[:4]:  # Limit to first 4 terms to avoid rate limits
+                    print(f"Searching r/{subreddit_name} for '{search_term}'")
+                    
+                    # Search posts
+                    for submission in subreddit.search(search_term, limit=3, sort='relevance'):
+                        if submission.permalink in seen_urls:
+                            continue
+                        seen_urls.add(submission.permalink)
+                        
+                        # Much lower threshold to get more results
+                        if submission.score > 1 and calculate_age_days(submission.created_utc) < 365:
+                            snippet = {
+                                "title": submission.title,
+                                "snippet": extract_snippet(submission.selftext or ""),
+                                "subreddit": subreddit_name,
+                                "score": submission.score,
+                                "url": f"https://reddit.com{submission.permalink}",
+                                "age_days": calculate_age_days(submission.created_utc),
+                                "permalink": submission.permalink
+                            }
+                            snippets.append(snippet)
+                    
+                    # Also search comments in recent posts
+                    for submission in subreddit.search(search_term, limit=2, sort='relevance'):
+                        if submission.num_comments > 0:
+                            submission.comments.replace_more(limit=0)  # Don't load more comments
+                            for comment in submission.comments.list()[:5]:  # Top 5 comments
+                                if hasattr(comment, 'body') and comment.body and len(comment.body) > 50:
+                                    if comment.permalink in seen_urls:
+                                        continue
+                                    seen_urls.add(comment.permalink)
+                                    
+                                    if comment.score > 1 and calculate_age_days(comment.created_utc) < 365:
+                                        snippet = {
+                                            "title": f"Comment on: {submission.title}",
+                                            "snippet": extract_snippet(comment.body),
+                                            "subreddit": subreddit_name,
+                                            "score": comment.score,
+                                            "url": f"https://reddit.com{comment.permalink}",
+                                            "age_days": calculate_age_days(comment.created_utc),
+                                            "permalink": comment.permalink
+                                        }
+                                        snippets.append(snippet)
+                        
+            except Exception as e:
+                print(f"Error searching r/{subreddit_name}: {e}")
+                continue
         
-        # Search posts only (no comments for speed)
-        for submission in subreddit.search(search_term, limit=5, sort='relevance'):
-            if submission.score > 3:  # Lower threshold for more results
-                snippet = {
-                    "title": submission.title,
-                    "snippet": extract_snippet(submission.selftext or ""),
-                    "subreddit": subreddit_name,
-                    "score": submission.score,
-                    "url": f"https://reddit.com{submission.permalink}",
-                    "age_days": calculate_age_days(submission.created_utc),
-                    "permalink": submission.permalink
-                }
-                snippets.append(snippet)
-        
-        # Only return real data, no mock data fallback
         print(f"Found {len(snippets)} real Reddit snippets for {course_code}")
         
-        # Sort by score and limit
-        snippets.sort(key=lambda x: x["score"], reverse=True)
+        # Sort by score and recency, then limit
+        snippets.sort(key=lambda x: (x["score"], -x["age_days"]), reverse=True)
         return snippets[:limit]
         
     except Exception as e:
@@ -161,6 +238,61 @@ def get_mock_reddit_data(course_code: str) -> List[Dict]:
         }
     ]
 
+def search_broad_course_discussions(course_code: str, limit: int = 10) -> List[Dict]:
+    """
+    Search for broader course discussions that might not mention the specific course code
+    but are related to the subject area
+    """
+    if not reddit:
+        return []
+    
+    dept, num = extract_department_and_number(course_code)
+    snippets = []
+    seen_urls = set()
+    
+    # Broad search terms for general course discussions
+    broad_terms = [
+        f"{dept} first year",
+        f"{dept} beginner",
+        f"{dept} intro",
+        f"{dept} 100 level",
+        f"{dept} courses",
+        "course selection",
+        "elective recommendations"
+    ]
+    
+    try:
+        for subreddit_name in ["uwaterloo", "mcgill", "uoft", "ubc"]:
+            try:
+                subreddit = reddit.subreddit(subreddit_name)
+                
+                for term in broad_terms:
+                    for submission in subreddit.search(term, limit=2, sort='relevance'):
+                        if submission.permalink in seen_urls:
+                            continue
+                        seen_urls.add(submission.permalink)
+                        
+                        if submission.score > 2 and calculate_age_days(submission.created_utc) < 180:
+                            snippet = {
+                                "title": f"[Related] {submission.title}",
+                                "snippet": extract_snippet(submission.selftext or ""),
+                                "subreddit": subreddit_name,
+                                "score": submission.score,
+                                "url": f"https://reddit.com{submission.permalink}",
+                                "age_days": calculate_age_days(submission.created_utc),
+                                "permalink": submission.permalink
+                            }
+                            snippets.append(snippet)
+                            
+            except Exception as e:
+                print(f"Error in broad search for r/{subreddit_name}: {e}")
+                continue
+                
+    except Exception as e:
+        print(f"Error in broad course search: {e}")
+    
+    return snippets[:limit]
+
 def scrape_course_reddit_data(course_code: str, term: str = "") -> List[Dict]:
     """
     Main function to scrape Reddit data for a course
@@ -177,10 +309,26 @@ def scrape_course_reddit_data(course_code: str, term: str = "") -> List[Dict]:
     # Try real Reddit API first
     if reddit:
         try:
+            # Get specific course results
             snippets = search_reddit_for_course(course_code)
-            if snippets:
-                print(f"Found {len(snippets)} Reddit snippets for {course_code} (real data)")
-                return snippets
+            
+            # If we don't have many results, try broader searches
+            if len(snippets) < 5:
+                print(f"Few specific results for {course_code}, trying broader search...")
+                broad_snippets = search_broad_course_discussions(course_code)
+                snippets.extend(broad_snippets)
+            
+            # Remove duplicates based on URL
+            seen_urls = set()
+            unique_snippets = []
+            for snippet in snippets:
+                if snippet["url"] not in seen_urls:
+                    seen_urls.add(snippet["url"])
+                    unique_snippets.append(snippet)
+            
+            if unique_snippets:
+                print(f"Found {len(unique_snippets)} Reddit snippets for {course_code} (real data)")
+                return unique_snippets
             else:
                 print(f"No real Reddit data found for {course_code}")
                 return []

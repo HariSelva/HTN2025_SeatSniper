@@ -56,3 +56,69 @@ export interface ApiResponse<T> {
   message?: string;
   success: boolean;
 }
+
+// Chat-related types
+export interface ChatMessage {
+  id: string;
+  content: string;
+  sender: 'user' | 'ai';
+  timestamp: Date;
+  sources?: WebSource[];
+  recommendations?: CourseRecommendation[];
+  searchInfo?: SearchInfo;
+}
+
+export interface WebSource {
+  title: string;
+  url: string;
+  snippet: string;
+  domain: string;
+  sourceType: 'web';
+  searchTimestamp: string;
+}
+
+export interface CourseRecommendation {
+  courseCode: string;
+  title: string;
+  description: string;
+  matchScore: number;
+  rationale: string;
+  prerequisites: string[];
+  estimatedWorkload: string;
+  bestSemester: string;
+  potentialChallenges: string[];
+  benefits: string[];
+  hasDetailedInfo: boolean;
+  databaseInfo?: any[];
+}
+
+export interface SearchInfo {
+  databaseResults: number;
+  webResults: number;
+  hasRecommendations: boolean;
+}
+
+export interface ChatRequest {
+  message: string;
+  conversationId?: string;
+  userId?: string;
+}
+
+export interface ChatResponse {
+  message: string;
+  conversationId: string;
+  sources: WebSource[];
+  recommendations: CourseRecommendation[];
+  searchInfo: SearchInfo;
+}
+
+export interface CourseRecommendationRequest {
+  goals: string[];
+  timeConstraints: {
+    semester?: string;
+    schedulePreference?: string;
+    maxCourses?: number;
+  };
+  academicLevel: string;
+  interests: string[];
+}

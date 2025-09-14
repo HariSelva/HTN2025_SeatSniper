@@ -1,14 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { chatApi } from '@/utils/api';
+import { ChatMessage, WebSource, CourseRecommendation, SearchInfo } from '@/types';
 
-interface Message {
-  id: string;
-  content: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
-}
+// Use the ChatMessage interface from types
 
 export const ChatWithAIPage: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
       content: "Hi! I'm your course planning assistant. I can help you choose courses, understand prerequisites, check course schedules, and provide academic advice. How can I help you today?",
@@ -18,6 +15,7 @@ export const ChatWithAIPage: React.FC = () => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -31,7 +29,7 @@ export const ChatWithAIPage: React.FC = () => {
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       id: Date.now().toString(),
       content: inputMessage,
       sender: 'user',
@@ -43,20 +41,28 @@ export const ChatWithAIPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Simulate AI response (replace with actual OpenAI API call)
-      const aiResponse = await simulateAIResponse(inputMessage);
+      // Call the real GPT-5 API
+      const response = await chatApi.sendMessage(inputMessage, conversationId || undefined);
       
-      const aiMessage: Message = {
+      // Update conversation ID if this is a new conversation
+      if (!conversationId) {
+        setConversationId(response.data.conversationId);
+      }
+      
+      const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: aiResponse,
+        content: response.data.message,
         sender: 'ai',
-        timestamp: new Date()
+        timestamp: new Date(),
+        sources: response.data.sources,
+        recommendations: response.data.recommendations,
+        searchInfo: response.data.searchInfo
       };
 
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
-      const errorMessage: Message = {
+      const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         content: "I'm sorry, I encountered an error. Please try again.",
         sender: 'ai',
@@ -68,30 +74,61 @@ export const ChatWithAIPage: React.FC = () => {
     }
   };
 
-  const simulateAIResponse = async (message: string): Promise<string> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  // Component to render web sources
+  const WebSources = ({ sources }: { sources: WebSource[] }) => {
+    if (!sources || sources.length === 0) return null;
     
-    // Mock responses based on common course-related queries
-    const lowerMessage = message.toLowerCase();
+    return (
+      <div className="mt-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+        <h4 className="font-semibold text-blue-800 mb-2">📚 Web Sources</h4>
+        <div className="space-y-2">
+          {sources.map((source, index) => (
+            <div key={index} className="text-sm">
+              <a 
+                href={source.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline"
+              >
+                {source.title}
+              </a>
+              <p className="text-gray-600 mt-1">{source.snippet}</p>
+              <span className="text-xs text-gray-500">{source.domain}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Component to render course recommendations
+  const CourseRecommendations = ({ recommendations }: { recommendations: CourseRecommendation[] }) => {
+    if (!recommendations || recommendations.length === 0) return null;
     
-    if (lowerMessage.includes('course') && lowerMessage.includes('recommend')) {
-      return "Based on your academic interests, I'd recommend looking at our CS courses. CS101 (Introduction to Computer Science) is perfect for beginners, while CS201 (Data Structures and Algorithms) builds on foundational concepts. What's your current academic level and area of interest?";
-    }
-    
-    if (lowerMessage.includes('prerequisite') || lowerMessage.includes('requirement')) {
-      return "I can help you check prerequisites! Most CS courses have specific requirements. For example, CS201 requires CS101 or equivalent programming experience. What specific course are you interested in?";
-    }
-    
-    if (lowerMessage.includes('schedule') || lowerMessage.includes('time')) {
-      return "I can help you plan your schedule! Our courses are offered at various times throughout the week. Would you like me to show you available time slots for specific courses, or help you avoid scheduling conflicts?";
-    }
-    
-    if (lowerMessage.includes('professor') || lowerMessage.includes('prof')) {
-      return "Great question about professors! I can provide information about instructor ratings and teaching styles. Which course or professor are you curious about?";
-    }
-    
-    return "That's a great question! I'm here to help with course selection, scheduling, prerequisites, and academic planning. Could you be more specific about what you'd like to know? For example, you could ask about course recommendations, scheduling conflicts, or prerequisite requirements.";
+    return (
+      <div className="mt-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-400">
+        <h4 className="font-semibold text-green-800 mb-2">🎯 Course Recommendations</h4>
+        <div className="space-y-3">
+          {recommendations.map((rec, index) => (
+            <div key={index} className="border border-green-200 rounded p-3 bg-white">
+              <div className="flex justify-between items-start mb-2">
+                <h5 className="font-medium text-green-800">{rec.courseCode} - {rec.title}</h5>
+                <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded">
+                  Match: {rec.matchScore}/10
+                </span>
+              </div>
+              <p className="text-sm text-gray-700 mb-2">{rec.description}</p>
+              <p className="text-sm text-green-700 mb-2"><strong>Why:</strong> {rec.rationale}</p>
+              {rec.prerequisites.length > 0 && (
+                <p className="text-xs text-gray-600">
+                  <strong>Prerequisites:</strong> {rec.prerequisites.join(', ')}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -103,10 +140,29 @@ export const ChatWithAIPage: React.FC = () => {
 
   const quickActions = [
     "Recommend courses for computer science major",
-    "Check prerequisites for CS201",
+    "Check prerequisites for CS201", 
     "Help me plan my fall schedule",
-    "What courses have the best professors?"
+    "What courses have the best professors?",
+    "Suggest courses based on my career goals",
+    "Find courses that fit my morning schedule"
   ];
+
+  const clearConversation = async () => {
+    if (conversationId) {
+      try {
+        await chatApi.clearConversation(conversationId);
+        setMessages([{
+          id: '1',
+          content: "Hi! I'm your course planning assistant. I can help you choose courses, understand prerequisites, check course schedules, and provide academic advice. How can I help you today?",
+          sender: 'ai',
+          timestamp: new Date()
+        }]);
+        setConversationId(null);
+      } catch (error) {
+        console.error('Error clearing conversation:', error);
+      }
+    }
+  };
 
   return (
     <div className="container-linkedin py-8">
@@ -117,6 +173,14 @@ export const ChatWithAIPage: React.FC = () => {
           <p className="subheading-linkedin">
             Get personalized course recommendations and academic guidance
           </p>
+          {conversationId && (
+            <button
+              onClick={clearConversation}
+              className="mt-2 text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              Clear Conversation
+            </button>
+          )}
         </div>
 
         {/* Chat Container */}
@@ -136,6 +200,17 @@ export const ChatWithAIPage: React.FC = () => {
                   }`}
                 >
                   <p className="text-sm">{message.content}</p>
+                  
+                  {/* Render web sources for AI messages */}
+                  {message.sender === 'ai' && message.sources && (
+                    <WebSources sources={message.sources} />
+                  )}
+                  
+                  {/* Render course recommendations for AI messages */}
+                  {message.sender === 'ai' && message.recommendations && (
+                    <CourseRecommendations recommendations={message.recommendations} />
+                  )}
+                  
                   <p className={`text-xs mt-1 opacity-70`}>
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>

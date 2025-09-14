@@ -38,6 +38,30 @@ export const apiClient = {
   delete: <T>(url: string) => api.delete<ApiResponse<T>>(url).then(res => res.data),
 };
 
+// Chat API functions
+export const chatApi = {
+  sendMessage: (message: string, conversationId?: string, userId?: string) =>
+    apiClient.post('/api/chat/chat', {
+      message,
+      conversation_id: conversationId,
+      user_id: userId
+    }),
+  
+  getConversationHistory: (conversationId: string) =>
+    apiClient.get(`/api/chat/conversation/${conversationId}`),
+  
+  clearConversation: (conversationId: string) =>
+    apiClient.delete(`/api/chat/conversation/${conversationId}`),
+  
+  recommendCourses: (goals: string[], timeConstraints: any, academicLevel: string, interests: string[]) =>
+    apiClient.post('/api/chat/recommend-courses', {
+      goals,
+      time_constraints: timeConstraints,
+      academic_level: academicLevel,
+      interests
+    })
+};
+
 // Helper function to transform snake_case to camelCase
 export const transformToCamelCase = (obj: any): any => {
   if (obj === null || obj === undefined) return obj;
