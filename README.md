@@ -87,7 +87,42 @@ HTN2025_/
     ├── SETUP.md               # Detailed setup instructions
     └── API.md                 # API documentation
 ```
+## Data Flow Diagram
 
+```mermaid
+
+sequenceDiagram
+    participant Scraper as Scraper / Poll Task
+    participant Dynamo as DynamoDB (course_sections & user_notifications)
+    participant Backend as FastAPI Backend
+    participant SSE as SSE Stream
+    participant UI as React Frontend
+    participant User as Student/User
+
+    User ->> UI: Subscribes to a course section
+    UI ->> Backend: POST /notifications (user_id, section_id, email)
+    Backend ->> Dynamo: PutItem into user_notifications
+
+    Scraper ->> Dynamo: UpdateItem course_sections (available_seats)
+
+    loop Every 1s
+        Backend ->> Dynamo: Scan course_sections
+        Dynamo -->> Backend: Items (current availability)
+        Backend ->> Backend: Compare against previous state
+        alt Seats 0→>0
+            Backend ->> Dynamo: Query user_notifications
+            Dynamo -->> Backend: Subscribed users
+            Backend ->> User: Send email notifications
+            Backend ->> SSE: Emit seat-open event
+            SSE -->> UI: Real-time seat availability update
+        else No change
+            Backend ->> SSE: Send heartbeat
+            SSE -->> UI: Keep connection alive
+        end
+    end
+
+    UI -->> User: Shows seat availability, watchlist updates, holds
+```
 ## 🏗️ Architecture
 
 ### Frontend (React + TypeScript)
